@@ -58,3 +58,8 @@ export class GetPostReqDto {
   @ApiProperty({ required: true })
   content: string;
 }
+
+export class UploadImageResDto {
+  @ApiProperty({ required: true })
+  name: string;
+}

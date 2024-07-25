@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -45,7 +46,7 @@ export class PostService {
     const post = await this.prismaService.post.findUnique({
       where: { id },
     });
-    
+
     if (!post) throw new NotFoundException('게시글을 찾을 수 없습니다');
 
     const decoded = this.jwtService.decode(token);
@@ -153,5 +154,21 @@ export class PostService {
     });
 
     return updatePost;
+  }
+
+  async uploadImage(token: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('파일을 찾을 수 없습니다');
+    }
+
+    const decoded = this.jwtService.decode(token);
+
+    const user = await this.prismaService.user.findUnique({
+      where: { id: decoded.sub },
+    });
+
+    if (!user) throw new NotFoundException('허용되지 않은 사용자입니다');
+
+    return file.path;
   }
 }

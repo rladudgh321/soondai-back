@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsUUID } from 'class-validator';
 
 export class addpostReqDto {
   @ApiProperty({ required: true, example: '제목' })
@@ -62,5 +61,10 @@ export class getPostReqDto {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5NTNkY2I1OS0wNWU2LTRmZmMtODBjMC01MGRhMDIwYzE0ZWIiLCJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3MTgwOTY1MjQsImV4cCI6MTcxODE4MjkyNH0.5JwCMuXrorjpmH_DUO6tQ_1KDCSY3j_VCwcZneZpPMM',
     description: 'acessToken 만료되면 변경시켜줘야함',
   })
+  token: string;
+}
+
+export class UploadImageReqDto {
+  @ApiProperty({ required: true })
   token: string;
 }

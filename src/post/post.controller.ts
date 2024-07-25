@@ -6,19 +6,33 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiExtraModels,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { Role } from 'src/user/enum/role.enum';
 import {
   UpdatePostReqDto,
+  UploadImageReqDto,
   addpostReqDto,
   getPostReqDto,
-  removePostReqDto,
+  removePostReqDto
 } from './dto/req.dto';
-import { GetPostReqDto, RemovePostResDto, UpdatePostResDto, addpostResDto } from './dto/res.dto';
+import {
+  GetPostReqDto,
+  RemovePostResDto,
+  UpdatePostResDto,
+  addpostResDto,
+} from './dto/res.dto';
 import { PostService } from './post.service';
 
 @ApiTags('post')
@@ -50,17 +64,7 @@ export class PostController {
     return posts;
   }
 
-  @Public()
-  @ApiBearerAuth()
-  @Post(':id')
-  async getPost(
-    @Param() { id }: getPostReqDto,
-    @Body() { token }: getPostReqDto,
-  ): Promise<GetPostReqDto> {
-    console.log('back token', token);
-    const post = await this.postService.getPost(id, token);
-    return { id, title: post.title, content: post.content };
-  }
+
 
   @ApiBearerAuth()
   @Delete(':id')
@@ -106,4 +110,32 @@ export class PostController {
     const post = await this.postService.updatePost(id, title, content, token);
     return { id, title: post.title, content: post.content };
   }
+
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadFile(
+    @Body() { token }: UploadImageReqDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<any> {
+    console.log(file);
+    return this.postService.uploadImage(token, file);
+  }
+
+
+  // 경로 위치 조심
+  @Public()
+  @ApiBearerAuth()
+  @Post(':id')
+  async getPost(
+    @Param() { id }: getPostReqDto,
+    @Body() { token }: getPostReqDto,
+  ): Promise<GetPostReqDto> {
+    console.log('back token', token);
+    const post = await this.postService.getPost(id, token);
+    return { id, title: post.title, content: post.content };
+  }
+
+
 }

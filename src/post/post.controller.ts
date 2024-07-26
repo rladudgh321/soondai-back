@@ -3,7 +3,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseFilePipeBuilder,
   Patch,
   Post,
   UploadedFile,
@@ -41,6 +43,38 @@ import { PostService } from './post.service';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  @Public()
+  @ApiBearerAuth()
+  @Get('getposts')
+  async getPosts() {
+    const posts = await this.postService.getPosts();
+    return posts;
+  }
+
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('upload')
+  uploadFile(
+    @Body() { token }: UploadImageReqDto,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    file: Express.Multer.File,
+  ): Promise<any> {
+    console.log('file', file, 'token', token);
+    return this.postService.uploadImage(token, file);
+  }
+
   @ApiPostResponse(addpostResDto)
   @ApiBearerAuth()
   @Post('/')
@@ -55,16 +89,6 @@ export class PostController {
       postId: post.id,
     };
   }
-
-  @Public()
-  @ApiBearerAuth()
-  @Get('getposts')
-  async getPosts() {
-    const posts = await this.postService.getPosts();
-    return posts;
-  }
-
-
 
   @ApiBearerAuth()
   @Delete(':id')
@@ -111,17 +135,7 @@ export class PostController {
     return { id, title: post.title, content: post.content };
   }
 
-  @ApiBearerAuth()
-  @ApiConsumes('multipart/form-data')
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(
-    @Body() { token }: UploadImageReqDto,
-    @UploadedFile() file: Express.Multer.File,
-  ): Promise<any> {
-    console.log(file);
-    return this.postService.uploadImage(token, file);
-  }
+
 
 
   // 경로 위치 조심

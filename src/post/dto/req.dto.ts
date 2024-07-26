@@ -67,4 +67,7 @@ export class getPostReqDto {
 export class UploadImageReqDto {
   @ApiProperty({ required: true })
   token: string;
+
+  @ApiProperty({ required: true, type: 'string', format: 'binary' })
+  file: string;
 }

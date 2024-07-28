@@ -161,7 +161,7 @@ export class PostService {
       throw new BadRequestException('파일을 찾을 수 없습니다');
     }
 
-    const decoded = this.jwtService.decode(token);
+    const decoded = await this.jwtService.decode(token);
 
     const user = await this.prismaService.user.findUnique({
       where: { id: decoded.sub },

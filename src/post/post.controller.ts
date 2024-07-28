@@ -60,7 +60,7 @@ export class PostController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: 'image',
+          fileType: 'jpg',
         })
         .addMaxSizeValidator({
           maxSize: 5 * 1024 * 1024,
@@ -71,6 +71,7 @@ export class PostController {
     )
     file: Express.Multer.File,
   ): Promise<any> {
+    console.log('back *********');
     console.log('file', file, 'token', token);
     return this.postService.uploadImage(token, file);
   }

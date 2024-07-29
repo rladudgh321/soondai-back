@@ -14,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiConsumes,
   ApiExtraModels,
   ApiTags,
@@ -27,7 +28,7 @@ import {
   UploadImageReqDto,
   addpostReqDto,
   getPostReqDto,
-  removePostReqDto
+  removePostReqDto,
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -51,16 +52,27 @@ export class PostController {
     return posts;
   }
 
+  @Public()
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @Post('upload')
   uploadFile(
-    @Body() { token }: UploadImageReqDto,
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: 'jpg',
+          fileType: /(jpg|jpeg|png|webp)$/,
         })
         .addMaxSizeValidator({
           maxSize: 5 * 1024 * 1024,
@@ -72,8 +84,8 @@ export class PostController {
     file: Express.Multer.File,
   ): Promise<any> {
     console.log('back *********');
-    console.log('file', file, 'token', token);
-    return this.postService.uploadImage(token, file);
+    console.log('file', file);
+    return this.postService.uploadImage(file);
   }
 
   @ApiPostResponse(addpostResDto)
@@ -136,9 +148,6 @@ export class PostController {
     return { id, title: post.title, content: post.content };
   }
 
-
-
-
   // 경로 위치 조심
   @Public()
   @ApiBearerAuth()
@@ -151,6 +160,4 @@ export class PostController {
     const post = await this.postService.getPost(id, token);
     return { id, title: post.title, content: post.content };
   }
-
-
 }

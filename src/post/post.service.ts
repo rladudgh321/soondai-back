@@ -16,7 +16,16 @@ export class PostService {
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
   ) {}
-  async addpost(title: string, content: string, token: string) {
+  async addpost(
+    title: string,
+    content: string,
+    token: string,
+    published: boolean,
+    highlight: boolean,
+    image: string,
+    category: string,
+    select: Date,
+  ) {
     const decoded = this.jwtService.decode(token);
     const user = await this.prismaService.user.findUnique({
       where: { id: decoded.sub },
@@ -26,14 +35,33 @@ export class PostService {
       throw new NotFoundException('작성자를 찾을 수 없습니다.');
     }
 
+    const currentTime = new Date();
+    const alterTime = new Date(select);
+    console.log('before', alterTime);
+
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const seconds = currentTime.getSeconds();
+    const milliseconds = currentTime.getMilliseconds();
+
+    alterTime.setHours(hours);
+    alterTime.setMinutes(minutes);
+    alterTime.setSeconds(seconds);
+    alterTime.setMilliseconds(milliseconds);
+    console.log('after', alterTime);
     const post = await this.prismaService.post.create({
       data: {
         title,
         content,
+        published,
+        highlight,
+        image,
+        category,
+        select,
         author: { connect: { id: user.id } },
+        createdAt: alterTime,
       },
     });
-
     return post;
   }
 

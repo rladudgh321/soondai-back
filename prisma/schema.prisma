@@ -44,4 +44,7 @@ model Post {
   highlight Boolean @default(false)
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
+  category  String   
+  image     String?
+  select    DateTime?
 }

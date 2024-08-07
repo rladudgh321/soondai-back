@@ -92,9 +92,28 @@ export class PostController {
   @ApiBearerAuth()
   @Post('/')
   async addpost(
-    @Body() { title, content, token }: addpostReqDto,
+    @Body()
+    {
+      title,
+      content,
+      token,
+      published,
+      highlight,
+      image,
+      category,
+      select,
+    }: addpostReqDto,
   ): Promise<addpostResDto> {
-    const post = await this.postService.addpost(title, content, token);
+    const post = await this.postService.addpost(
+      title,
+      content,
+      token,
+      published,
+      highlight,
+      image,
+      category,
+      select,
+    );
     return {
       id: post.authorId,
       title: post.title,

@@ -1,0 +1,29 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class addCommentResDto {
+  @ApiPropertyOptional({ title: '유저 프로필 사진' })
+  profile?: string;
+
+  @ApiProperty({ title: '유저 이름', example: '홍길동' })
+  name: string;
+
+  @ApiProperty({ title: '생성일', example: new Date('2024-01-01') })
+  createdAt: Date;
+
+  @ApiProperty({ title: '댓글', example: '댓글입니다' })
+  content: string;
+}
+
+export class getCommentResDto {
+  @ApiPropertyOptional({ title: '유저 프로필 사진' })
+  profile?: string;
+
+  @ApiProperty({ title: '유저 이름', example: '홍길동' })
+  name: string;
+
+  @ApiProperty({ title: '생성일', example: new Date('2024-01-01') })
+  createdAt: Date;
+
+  @ApiProperty({ title: '댓글', example: '댓글입니다' })
+  content: string;
+}

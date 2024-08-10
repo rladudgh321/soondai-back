@@ -6,6 +6,7 @@ import { UserService } from 'src/user/user.service';
 import { MulterConfigService } from './multer.config';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -14,6 +15,12 @@ import { PostService } from './post.service';
     }),
   ],
   controllers: [PostController],
-  providers: [PostService, PrismaService, JwtService, UserService],
+  providers: [
+    PostService,
+    PrismaService,
+    JwtService,
+    UserService,
+    ConfigService,
+  ],
 })
 export class PostModule {}

@@ -82,9 +82,7 @@ export class PostController {
         }),
     )
     file: Express.Multer.File,
-  ): Promise<any> {
-    console.log('back *********');
-    console.log('file', file);
+  ) {
     return this.postService.uploadImage(file);
   }
 

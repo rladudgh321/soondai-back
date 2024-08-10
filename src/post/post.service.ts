@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role } from 'src/user/enum/role.enum';
@@ -15,6 +16,7 @@ export class PostService {
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
   async addpost(
     title: string,
@@ -26,7 +28,9 @@ export class PostService {
     category: string,
     select: Date,
   ) {
-    const decoded = this.jwtService.decode(token);
+    const decoded = this.jwtService.verify(token, {
+      secret: this.configService.get('jwt').secret,
+    });
     const user = await this.prismaService.user.findUnique({
       where: { id: decoded.sub },
     });
@@ -37,7 +41,6 @@ export class PostService {
 
     const currentTime = new Date();
     const alterTime = new Date(select);
-    console.log('before', alterTime);
 
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
@@ -48,7 +51,7 @@ export class PostService {
     alterTime.setMinutes(minutes);
     alterTime.setSeconds(seconds);
     alterTime.setMilliseconds(milliseconds);
-    console.log('after', alterTime);
+
     const post = await this.prismaService.post.create({
       data: {
         title,
@@ -77,7 +80,7 @@ export class PostService {
 
     if (!post) throw new NotFoundException('게시글을 찾을 수 없습니다');
 
-    const decoded = this.jwtService.decode(token);
+    const decoded = this.jwtService.verify(token);
     if (post.authorId !== decoded?.sub)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
 

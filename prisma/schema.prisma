@@ -23,6 +23,8 @@ model User {
   updatedAt DateTime @updatedAt
   refreshToken RefreshToken?
   posts   Post[]
+  comments Comment[]
+
 }
 
 model RefreshToken {
@@ -47,4 +49,15 @@ model Post {
   category  String   
   image     String?
   select    DateTime?
+  comments  Comment[]
+}
+
+model Comment {
+  id        String      @id @default(uuid())
+  createdAt DateTime @default(now())
+  content   String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String 
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String 
 }

@@ -1,15 +1,32 @@
-import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
-import { CommentService } from './comment.service';
-import { addCommentResDto, getCommentResDto } from './dto/res.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  NotFoundException,
+  Param,
+  Post
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
-import { addCommentReqDto, getCommentReqDto } from './dto/req.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CommentService } from './comment.service';
+import { addCommentReqDto, removeCommentReqDto } from './dto/req.dto';
+import {
+  addCommentResDto,
+  getCommentResDto,
+  removeCommentResDto,
+} from './dto/res.dto';
 
 @ApiTags('comment')
 @ApiExtraModels(addCommentResDto, getCommentResDto)
 @Controller('comment')
 export class CommentController {
-  constructor(private readonly commentService: CommentService) {}
+  constructor(
+    private readonly commentService: CommentService,
+    private readonly prismaService: PrismaService,
+  ) {}
 
   @ApiPostResponse(addCommentResDto)
   @ApiBearerAuth()
@@ -31,12 +48,33 @@ export class CommentController {
   @ApiBearerAuth()
   @Get(':param') // param은 postId
   async getComment(
-    @Headers() { token, param }: getCommentReqDto,
+    @Headers('authorization') token: string,
+    @Param('param') param: string,
     // @Param() { param }: getCommentReqDto,
   ): Promise<any> {
-    console.log('************************************');
+    console.log('************************************', token, param);
     const comment = await this.commentService.getComment(token, param);
     console.log('************************************getComment', comment);
     return comment;
+  }
+
+  @ApiBearerAuth()
+  @Delete(':id')
+  async removeComment(
+    @Param() { postId, commentId }: removeCommentReqDto,
+    @Headers('authorization') { token }: removeCommentReqDto,
+  ): Promise<removeCommentResDto> {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
+
+    const comment = await this.commentService.removeComment(
+      postId,
+      commentId,
+      token,
+    );
+    return { postId: comment.postId, commentId: comment.commentId };
   }
 }

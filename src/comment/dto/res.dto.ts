@@ -27,3 +27,11 @@ export class getCommentResDto {
   @ApiProperty({ title: '댓글', example: '댓글입니다' })
   content: string;
 }
+
+export class removeCommentResDto {
+  @ApiProperty({ title: '포스트 아이디' })
+  postId: string;
+
+  @ApiProperty({ title: '댓글 아이디' })
+  commentId: string;
+}

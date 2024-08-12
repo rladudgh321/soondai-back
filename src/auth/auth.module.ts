@@ -7,7 +7,6 @@ import { UserModule } from 'src/user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt-strategy';
-import { UserService } from 'src/user/user.service';
 
 @Module({
   imports: [
@@ -30,7 +29,6 @@ import { UserService } from 'src/user/user.service';
     PrismaService,
     JwtStrategy,
     Logger,
-    UserService,
     ConfigService,
   ],
   exports: [AuthService],

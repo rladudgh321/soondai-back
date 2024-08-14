@@ -91,15 +91,17 @@ export class PostService {
     const post = await this.prismaService.post.findUnique({ where: { id } });
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
 
-    const userId = this.jwtService.decode(data).sub;
+    const decoded = this.jwtService.verify(data.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
 
-    const user = await this.userService.findOne(userId);
+    const user = await this.userService.findOne(decoded.sub);
 
     if (user.role === Role.Admin) {
       return this.removePostByAdmin(id);
     }
 
-    if (post.authorId !== userId)
+    if (post.authorId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
 
     const removePost = await this.prismaService.post.delete({ where: { id } });

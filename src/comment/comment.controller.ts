@@ -6,7 +6,7 @@ import {
   Headers,
   NotFoundException,
   Param,
-  Post
+  Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
@@ -17,6 +17,7 @@ import {
   addCommentResDto,
   getCommentResDto,
   removeCommentResDto,
+  removeCommentsResDto,
 } from './dto/res.dto';
 
 @ApiTags('comment')
@@ -32,8 +33,9 @@ export class CommentController {
   @ApiBearerAuth()
   @Post(':param')
   async addComment(
-    @Body() { content, token }: addCommentReqDto,
-    @Param() { param }: addCommentReqDto,
+    @Body() { content }: addCommentReqDto,
+    @Headers('authorization') token: string,
+    @Param('param') param: string,
   ): Promise<addCommentResDto> {
     const comment = await this.commentService.addComment(content, token, param);
     return {
@@ -59,11 +61,31 @@ export class CommentController {
   }
 
   @ApiBearerAuth()
-  @Delete(':id')
+  @Delete(':postId/deleteComments')
+  async removeComments(
+    @Param('postId') postId: string,
+    @Headers('authorization') token: string,
+  ): Promise<removeCommentsResDto> {
+    console.log('removeComment', token, postId);
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
+
+    const comment = await this.commentService.removeComments(postId, token);
+    // count obejct { count : 3}
+    console.log('removeComment return', comment);
+    return { count: comment.count };
+  }
+
+  @ApiBearerAuth()
+  @Delete(':postId/:commentId')
   async removeComment(
     @Param() { postId, commentId }: removeCommentReqDto,
-    @Headers('authorization') { token }: removeCommentReqDto,
+    @Headers('authorization') token: string,
   ): Promise<removeCommentResDto> {
+    console.log('removeComment', token);
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });

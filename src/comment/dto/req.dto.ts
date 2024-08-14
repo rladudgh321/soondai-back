@@ -29,13 +29,6 @@ export class getCommentReqDto {
 export class removeCommentReqDto {
   @ApiProperty({
     required: true,
-    example:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1YzliYmJjNi1kYzVjLTRhMTYtYmFmMS1kYTQzNGRmNGMxZjUiLCJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3MjMyOTcwNTgsImV4cCI6MTcyMzM4MzQ1OH0.Iq_Zw0Iny58Cadc6pEA4L9_OHogafJZeK_B0sNz2AMk',
-  })
-  token: string;
-
-  @ApiProperty({
-    required: true,
     example: 'b5b23008-a983-4ccf-8869-0d61533258f9',
   })
   postId: string;
@@ -45,4 +38,12 @@ export class removeCommentReqDto {
     example: 'b5b23008-a983-4ccf-8869-0d61533258f9',
   })
   commentId: string;
+}
+
+export class removeCommentsReqDto {
+  @ApiProperty({
+    required: true,
+    example: 'b5b23008-a983-4ccf-8869-0d61533258f9',
+  })
+  postId: string;
 }

@@ -35,3 +35,10 @@ export class removeCommentResDto {
   @ApiProperty({ title: '댓글 아이디' })
   commentId: string;
 }
+
+export class removeCommentsResDto {
+  @ApiProperty({
+    required: true,
+  })
+  count: number;
+}

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   HttpStatus,
   Param,
   ParseFilePipeBuilder,
@@ -25,10 +26,9 @@ import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { Role } from 'src/user/enum/role.enum';
 import {
   UpdatePostReqDto,
-  UploadImageReqDto,
   addpostReqDto,
   getPostReqDto,
-  removePostReqDto,
+  removePostReqDto
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -123,8 +123,8 @@ export class PostController {
   @ApiBearerAuth()
   @Delete(':id')
   async removePost(
-    @Param() { id }: removePostReqDto,
-    @Body() { data }: removePostReqDto,
+    @Param('id') id: string,
+    @Headers('authorization') data: string,
   ): Promise<RemovePostResDto> {
     console.log('delete', id);
     const post = await this.postService.removePost(id, data);

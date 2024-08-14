@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class addCommentReqDto {
   @ApiProperty({ required: true })
@@ -9,6 +9,9 @@ export class addCommentReqDto {
 
   @ApiProperty({ required: true })
   token: string;
+
+  @ApiPropertyOptional({ title: '선택 시간' })
+  select?: Date;
 }
 
 export class getCommentReqDto {

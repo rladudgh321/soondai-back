@@ -20,7 +20,12 @@ export class CommentService {
     private readonly userService: UserService,
   ) {}
 
-  async addComment(content: string, token: string, param: string) {
+  async addComment(
+    content: string,
+    token: string,
+    param: string,
+    select: Date,
+  ) {
     console.log('addComment content', content);
     if (content.length === 0) {
       throw new BadRequestException('필수값이 미입력 됨');
@@ -42,8 +47,22 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
+    const currentTime = new Date();
+    const alterTime = new Date(select);
+
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const seconds = currentTime.getSeconds();
+    const milliseconds = currentTime.getMilliseconds();
+
+    alterTime.setHours(hours);
+    alterTime.setMinutes(minutes);
+    alterTime.setSeconds(seconds);
+    alterTime.setMilliseconds(milliseconds);
+
     const comment = await this.prismaService.comment.create({
       data: {
+        createdAt: alterTime,
         content,
         user: {
           connect: { email: user.email },
@@ -146,7 +165,7 @@ export class CommentService {
   }
 
   async removeComments(postId: string, token: string) {
-    //토큰을 이용한 로그인사용자
+    console.log('removeComments 서비스 초입');
     console.log('removeComment token key', token);
 
     const decoded = this.jwtService.verify(token.slice(7), {

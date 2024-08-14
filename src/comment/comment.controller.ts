@@ -33,11 +33,16 @@ export class CommentController {
   @ApiBearerAuth()
   @Post(':param')
   async addComment(
-    @Body() { content }: addCommentReqDto,
+    @Body() { content, select }: addCommentReqDto,
     @Headers('authorization') token: string,
     @Param('param') param: string,
   ): Promise<addCommentResDto> {
-    const comment = await this.commentService.addComment(content, token, param);
+    const comment = await this.commentService.addComment(
+      content,
+      token,
+      param,
+      select,
+    );
     return {
       profile: comment.user.profile,
       name: comment.user.name,
@@ -66,13 +71,14 @@ export class CommentController {
     @Param('postId') postId: string,
     @Headers('authorization') token: string,
   ): Promise<removeCommentsResDto> {
+    console.log('removeCommentsremoveCommentsremoveCommentsremoveComments');
     console.log('removeComment', token, postId);
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
 
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-
+    console.log('*removeComments* 서비스 들어가기 전');
     const comment = await this.commentService.removeComments(postId, token);
     // count obejct { count : 3}
     console.log('removeComment return', comment);

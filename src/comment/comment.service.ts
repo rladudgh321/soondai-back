@@ -86,6 +86,74 @@ export class CommentService {
     return comment;
   }
 
+  async addCommenta(
+    content: string,
+    token: string,
+    param: string,
+    select: Date,
+    parentId: string | never,
+  ) {
+    console.log('addComment content', content);
+    if (content.length === 0) {
+      throw new BadRequestException('필수값이 미입력 됨');
+    }
+
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+    const currentTime = new Date();
+    const alterTime = new Date(select);
+
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const seconds = currentTime.getSeconds();
+    const milliseconds = currentTime.getMilliseconds();
+
+    alterTime.setHours(hours);
+    alterTime.setMinutes(minutes);
+    alterTime.setSeconds(seconds);
+    alterTime.setMilliseconds(milliseconds);
+
+    const comment = await this.prismaService.comment.create({
+      data: {
+        createdAt: alterTime,
+        parent: { connect: { id: parentId } },
+        content,
+        user: {
+          connect: { email: user.email },
+        },
+        post: {
+          connect: { id: param },
+        },
+      },
+      select: {
+        content: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            profile: true,
+          },
+        },
+      },
+    });
+
+    return comment;
+  }
+
   async getComment(token: string, param: string) {
     console.log('****back token, param', token, param);
     const decoded = this.jwtService.verify(token.slice(7), {
@@ -122,13 +190,65 @@ export class CommentService {
     console.log('!!!!!!!!!!!');
 
     return comment.map(
-      ({ id, user: { profile, name }, createdAt, content }) => ({
-        id,
-        profile,
-        name,
-        createdAt,
-        content,
-      }),
+      ({ id, user: { profile, name }, createdAt, content, parentId }) => {
+        return {
+          id,
+          profile,
+          name,
+          createdAt,
+          content,
+          parentId,
+        };
+      },
+    );
+  }
+
+  async getCommenta(token: string, param: string, parentId: string) {
+    console.log('****back token, param', token, param);
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+    const user = await this.prismaService.user.findUnique({
+      where: { id: decoded.sub },
+    });
+
+    if (!user) {
+      throw new NotFoundException('작성자를 찾을 수 습니다.');
+    }
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+    const comment = await this.prismaService.comment.findMany({
+      where: { postId: param, parentId },
+      include: {
+        user: {
+          select: {
+            profile: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    console.log('!!!!!!!!!!!');
+
+    return comment.map(
+      ({ id, user: { profile, name }, createdAt, content, parentId }) => {
+        return {
+          id,
+          profile,
+          name,
+          createdAt,
+          content,
+          parentId,
+        };
+      },
     );
   }
 

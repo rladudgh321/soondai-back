@@ -12,7 +12,7 @@ import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CommentService } from './comment.service';
-import { addCommentReqDto, removeCommentReqDto } from './dto/req.dto';
+import { addCommentReqDto, getCommentReqDto, removeCommentReqDto } from './dto/req.dto';
 import {
   addCommentResDto,
   getCommentResDto,
@@ -35,13 +35,36 @@ export class CommentController {
   async addComment(
     @Body() { content, select }: addCommentReqDto,
     @Headers('authorization') token: string,
-    @Param('param') param: string,
+    @Param() { param }: addCommentReqDto,
   ): Promise<addCommentResDto> {
     const comment = await this.commentService.addComment(
       content,
       token,
       param,
       select,
+    );
+    return {
+      profile: comment.user.profile,
+      name: comment.user.name,
+      createdAt: comment.createdAt,
+      content: comment.content,
+    };
+  }
+
+  @ApiPostResponse(addCommentResDto)
+  @ApiBearerAuth()
+  @Post(':param/:parentId')
+  async addCommenta(
+    @Body() { content, select }: addCommentReqDto,
+    @Headers('authorization') token: string,
+    @Param() { param, parentId }: addCommentReqDto,
+  ): Promise<addCommentResDto> {
+    const comment = await this.commentService.addCommenta(
+      content,
+      token,
+      param,
+      select,
+      parentId,
     );
     return {
       profile: comment.user.profile,
@@ -62,6 +85,25 @@ export class CommentController {
     console.log('************************************', token, param);
     const comment = await this.commentService.getComment(token, param);
     console.log('************************************getComment', comment);
+    const commentWithoutParentId = comment.filter((v) => v.parentId === null);
+    return commentWithoutParentId;
+  }
+
+  @ApiPostResponse(getCommentResDto)
+  @ApiBearerAuth()
+  @Get(':param/:parentId') // param은 postId
+  async getCommenta(
+    @Headers('authorization') token: string,
+    @Param() { param, parentId }: getCommentReqDto,
+  ): Promise<any> {
+    console.log('************************************', token, param);
+    console.log(token, param, parentId);
+    const comment = await this.commentService.getCommenta(
+      token,
+      param,
+      parentId,
+    );
+    console.log('************************************getCommenta', comment);
     return comment;
   }
 

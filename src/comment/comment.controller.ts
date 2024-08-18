@@ -12,9 +12,10 @@ import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CommentService } from './comment.service';
-import { addCommentReqDto, getCommentReqDto, removeCommentReqDto } from './dto/req.dto';
+import { addCommentReqDto, addLikeComment, getCommentReqDto, removeCommentReqDto } from './dto/req.dto';
 import {
   addCommentResDto,
+  addLikeCommentResDto,
   getCommentResDto,
   removeCommentResDto,
   removeCommentsResDto,
@@ -74,6 +75,21 @@ export class CommentController {
     };
   }
 
+  @ApiPostResponse(addLikeCommentResDto)
+  @ApiBearerAuth()
+  @Post(':param/:commentId')
+  async addLikeComment(
+    @Headers('authorization') token: string,
+    @Param() { param, commentId }: addLikeComment,
+  ): Promise<addLikeCommentResDto> {
+    const comment = await this.commentService.addLikeComment(
+      token,
+      param,
+      commentId
+    );
+    return comment;
+  }
+
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
   @Get(':param') // param은 postId
@@ -106,6 +122,26 @@ export class CommentController {
     console.log('************************************getCommenta', comment);
     return comment;
   }
+
+  // @ApiBearerAuth()
+  // @Delete(':postId/deleteComments')
+  // async removeComments(
+  //   @Param('postId') postId: string,
+  //   @Headers('authorization') token: string,
+  // ): Promise<removeCommentsResDto> {
+  //   console.log('removeCommentsremoveCommentsremoveCommentsremoveComments');
+  //   console.log('removeComment', token, postId);
+  //   const post = await this.prismaService.post.findUnique({
+  //     where: { id: postId },
+  //   });
+
+  //   if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
+  //   console.log('*removeComments* 서비스 들어가기 전');
+  //   const comment = await this.commentService.removeComments(postId, token);
+  //   // count obejct { count : 3}
+  //   console.log('removeComment return', comment);
+  //   return { count: comment.count };
+  // }
 
   @ApiBearerAuth()
   @Delete(':postId/deleteComments')

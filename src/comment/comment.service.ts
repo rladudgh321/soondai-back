@@ -154,6 +154,49 @@ export class CommentService {
     return comment;
   }
 
+  async addLikeComment(
+    token: string,
+    param: string,
+    commentId: string,
+  ) {
+
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+
+
+    const comment = await this.prismaService.comment.create({
+      data: {
+        likeUsers: {
+          connect: {
+            likeId: user.id,
+          }
+        },
+        user: {
+          connect: { email: user.email },
+        },
+        post: {
+          connect: { id: param },
+        },
+      },
+    });
+
+    return comment;
+  }
+
   async getComment(token: string, param: string) {
     console.log('****back token, param', token, param);
     const decoded = this.jwtService.verify(token.slice(7), {
@@ -273,6 +316,10 @@ export class CommentService {
     //댓글쓴자 === 로그인사용자가 아니라면...
     if (comment.userId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
+
+      await this.prismaService.comment.deleteMany({
+        where: { parentId: commentId }
+      })
 
     await this.prismaService.comment.delete({
       where: { id: comment.id },

@@ -49,3 +49,11 @@ export class removeCommentsReqDto {
   })
   postId: string;
 }
+
+export class addLikeComment {
+  @ApiProperty({required: true})
+  param: string;
+  
+  @ApiProperty({required: true})
+  commentId: string;
+}

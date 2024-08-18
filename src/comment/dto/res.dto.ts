@@ -42,3 +42,8 @@ export class removeCommentsResDto {
   })
   count: number;
 }
+
+export class addLikeCommentResDto {
+  @ApiProperty({ required: true })
+  count: number;
+}

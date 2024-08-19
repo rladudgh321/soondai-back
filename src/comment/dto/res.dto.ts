@@ -26,6 +26,9 @@ export class getCommentResDto {
 
   @ApiProperty({ title: '댓글', example: '댓글입니다' })
   content: string;
+
+  @ApiProperty({ title: '댓글 유저아이디', example: '댓글유저입니다' })
+  userId: string;
 }
 
 export class removeCommentResDto {
@@ -44,6 +47,17 @@ export class removeCommentsResDto {
 }
 
 export class addLikeCommentResDto {
+  @ApiProperty({ required: true })
+  heartOrNot: string;
+
+  @ApiProperty({ required: true })
+  count: number;
+}
+
+export class getLikeCommentResDto {
+  @ApiProperty({ required: true })
+  heartOrNot: string;
+
   @ApiProperty({ required: true })
   count: number;
 }

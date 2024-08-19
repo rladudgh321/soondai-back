@@ -91,7 +91,7 @@ export class CommentService {
     token: string,
     param: string,
     select: Date,
-    parentId: string | never,
+    parentId: string,
   ) {
     console.log('addComment content', content);
     if (content.length === 0) {
@@ -154,12 +154,7 @@ export class CommentService {
     return comment;
   }
 
-  async addLikeComment(
-    token: string,
-    param: string,
-    commentId: string,
-  ) {
-
+  async addLikeComment(token: string, param: string, commentId: string) {
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
     });
@@ -176,25 +171,84 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
-
-
-    const comment = await this.prismaService.comment.create({
-      data: {
-        likeUsers: {
-          connect: {
-            likeId: user.id,
-          }
-        },
-        user: {
-          connect: { email: user.email },
-        },
-        post: {
-          connect: { id: param },
+    // 댓글의 기존 좋아요 확인
+    const existingLike = await this.prismaService.commentOnUser.findUnique({
+      where: {
+        userId_likeId: {
+          userId: user.id,
+          likeId: commentId,
         },
       },
     });
 
-    return comment;
+    if (existingLike) {
+      throw new ConflictException('이미 좋아요가 추가된 댓글입니다');
+    }
+
+    await this.prismaService.comment.update({
+      where: { id: commentId },
+      data: {
+        likeUsers: {
+          create: {
+            userId: user.id,
+          },
+        },
+      },
+    });
+
+    const likeCount = await this.prismaService.commentOnUser.count({
+      where: { likeId: commentId },
+    });
+
+    const HeartOrNot = await this.prismaService.commentOnUser.findUnique({
+      where: {
+        userId_likeId: {
+          userId: user.id,
+          likeId: commentId,
+        },
+      },
+    });
+
+    console.log('heartornot', HeartOrNot.userId);
+    console.log('comment like count', likeCount);
+
+    return { heartOrNot: HeartOrNot.userId, count: likeCount, userId: user.id };
+  }
+
+  async getLikeComment(token: string, param: string, commentId: string) {
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+    const likeCount = await this.prismaService.commentOnUser.count({
+      where: { likeId: commentId },
+    });
+
+    const HeartOrNot = await this.prismaService.commentOnUser.findUnique({
+      where: {
+        userId_likeId: {
+          userId: user.id,
+          likeId: commentId,
+        },
+      },
+    });
+
+    console.log('heartornot', HeartOrNot.userId);
+    console.log('comment like count', likeCount);
+
+    return { heartOrNot: HeartOrNot.userId, count: likeCount, userId: user.id };
   }
 
   async getComment(token: string, param: string) {
@@ -233,7 +287,14 @@ export class CommentService {
     console.log('!!!!!!!!!!!');
 
     return comment.map(
-      ({ id, user: { profile, name }, createdAt, content, parentId }) => {
+      ({
+        id,
+        user: { profile, name },
+        createdAt,
+        content,
+        parentId,
+        userId,
+      }) => {
         return {
           id,
           profile,
@@ -241,6 +302,7 @@ export class CommentService {
           createdAt,
           content,
           parentId,
+          userId,
         };
       },
     );
@@ -317,9 +379,9 @@ export class CommentService {
     if (comment.userId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
 
-      await this.prismaService.comment.deleteMany({
-        where: { parentId: commentId }
-      })
+    await this.prismaService.comment.deleteMany({
+      where: { parentId: commentId },
+    });
 
     await this.prismaService.comment.delete({
       where: { id: comment.id },

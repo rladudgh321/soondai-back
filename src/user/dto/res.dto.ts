@@ -14,3 +14,9 @@ export class FindUserResDto {
   @IsDate()
   createdAt: string;
 }
+
+export class GetUserIdResDto {
+  @ApiProperty({ required: true })
+  @IsUUID()
+  id: string;
+}

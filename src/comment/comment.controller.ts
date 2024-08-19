@@ -6,17 +6,25 @@ import {
   Headers,
   NotFoundException,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CommentService } from './comment.service';
-import { addCommentReqDto, addLikeComment, getCommentReqDto, removeCommentReqDto } from './dto/req.dto';
+import {
+  addCommentReqDto,
+  addLikeCommentReqDto,
+  getCommentReqDto,
+  getLikeCommentReqDto,
+  removeCommentReqDto,
+} from './dto/req.dto';
 import {
   addCommentResDto,
   addLikeCommentResDto,
   getCommentResDto,
+  getLikeCommentResDto,
   removeCommentResDto,
   removeCommentsResDto,
 } from './dto/res.dto';
@@ -29,6 +37,36 @@ export class CommentController {
     private readonly commentService: CommentService,
     private readonly prismaService: PrismaService,
   ) {}
+
+  @ApiPostResponse(addLikeCommentResDto)
+  @ApiBearerAuth()
+  @Patch(':param/:commentId')
+  async addLikeComment(
+    @Headers('authorization') token: string,
+    @Param() { param, commentId }: addLikeCommentReqDto,
+  ): Promise<addLikeCommentResDto> {
+    const comment = await this.commentService.addLikeComment(
+      token,
+      param,
+      commentId,
+    );
+    return comment;
+  }
+
+  @ApiPostResponse(getLikeCommentResDto)
+  @ApiBearerAuth()
+  @Get(':param/:commentId')
+  async getLikeComment(
+    @Headers('authorization') token: string,
+    @Param() { param, commentId }: getLikeCommentReqDto,
+  ): Promise<any> {
+    const comment = await this.commentService.getLikeComment(
+      token,
+      param,
+      commentId,
+    );
+    return comment;
+  }
 
   @ApiPostResponse(addCommentResDto)
   @ApiBearerAuth()
@@ -73,21 +111,6 @@ export class CommentController {
       createdAt: comment.createdAt,
       content: comment.content,
     };
-  }
-
-  @ApiPostResponse(addLikeCommentResDto)
-  @ApiBearerAuth()
-  @Post(':param/:commentId')
-  async addLikeComment(
-    @Headers('authorization') token: string,
-    @Param() { param, commentId }: addLikeComment,
-  ): Promise<addLikeCommentResDto> {
-    const comment = await this.commentService.addLikeComment(
-      token,
-      param,
-      commentId
-    );
-    return comment;
   }
 
   @ApiPostResponse(getCommentResDto)

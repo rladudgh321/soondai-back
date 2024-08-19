@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query, Req, Headers } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import {
@@ -8,7 +8,7 @@ import {
 import { User, UserAfterAuth } from 'src/common/decorator/user.decorator';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { FindUserReqDto } from './dto/req.dto';
-import { FindUserResDto } from './dto/res.dto';
+import { FindUserResDto, GetUserIdResDto } from './dto/res.dto';
 import { Role } from './enum/role.enum';
 import { UserService } from './user.service';
 import { PageResDto } from 'src/common/dto/res.dto';
@@ -34,6 +34,16 @@ export class UserController {
     return users.map(({ id, email, createdAt }) => {
       return { id, email, createdAt: createdAt.toISOString() };
     });
+  }
+
+  @ApiGetResponse(GetUserIdResDto)
+  @ApiBearerAuth()
+  @Get('/findOne')
+  async getUserId(
+    @Headers('authorization') token: string,
+  ): Promise<GetUserIdResDto> {
+    const user = await this.userService.getUserId(token);
+    return { id: user.id };
   }
 
   @ApiGetResponse(FindUserResDto)

@@ -286,26 +286,94 @@ export class CommentService {
 
     console.log('!!!!!!!!!!!');
 
-    return comment.map(
-      ({
-        id,
-        user: { profile, name },
-        createdAt,
-        content,
-        parentId,
-        userId,
-      }) => {
-        return {
+    // commentOnUser의 userId 값을 추가해서 리턴해주기
+
+    comment.map(
+      async (v) =>
+        await this.prismaService.commentOnUser.findUnique({
+          where: {
+            userId_likeId: {
+              userId: user.id,
+              likeId: v.id,
+            },
+          },
+        }),
+    );
+
+    // return할 곳에 likers: [{id:1}, {id:2}] 형식으로 리턴을해라
+
+    const mapComment = await Promise.all(
+      comment.map(
+        async ({
           id,
-          profile,
-          name,
+          user: { profile, name },
           createdAt,
           content,
           parentId,
-          userId,
-        };
-      },
+        }) => {
+          return {
+            id,
+            profile,
+            name,
+            createdAt,
+            content,
+            parentId,
+            userId: await this.prismaService.commentOnUser.findUnique({
+              where: {
+                userId_likeId: {
+                  userId: user.id,
+                  likeId: id,
+                },
+              },
+            }),
+          };
+        },
+      ),
     );
+
+    // const hi = await Promise.all(
+    //   mapComment.map(async (v) => {
+    //     const userId = await this.prismaService.commentOnUser.findUnique({
+    //       where: {
+    //         userId_likeId: {
+    //           userId: user.id,
+    //           likeId: v.id,
+    //         },
+    //       },
+    //     });
+    //     return userId;
+    //   }),
+    // );
+
+    // console.log('hi', hi);
+
+    //   const posts = await prisma.profile
+    // .findUnique({
+    //   where: { id: 1 },
+    // })
+    // .user()
+    // .posts()
+
+    // const userIdInCommentOnUserModel = await this.prismaService.comment
+    //   .findMany({
+    //     where: {
+    //       postId: param,
+    //     },
+    //   })
+
+    // .likeUsers();
+
+    // const userIdInCommentOnUserModel =
+    //   await this.prismaService.commentOnUser.findUnique({
+    //     where: {
+    //       userId_likeId: {
+    //         userId: user.id,
+    //         likeId: 'dd',
+    //       },
+    //     },
+    //   });
+
+    return mapComment;
   }
 
   async getCommenta(token: string, param: string, parentId: string) {

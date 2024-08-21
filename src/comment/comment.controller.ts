@@ -53,9 +53,57 @@ export class CommentController {
     return comment;
   }
 
+  // @ApiPostResponse()
+  @ApiBearerAuth()
+  @Delete(':param/:commentId')
+  async removeLikeComment(
+    @Headers('authorization') token: string,
+    @Param() { param, commentId }: addLikeCommentReqDto,
+  ): Promise<any> {
+    const comment = await this.commentService.removeLikeComment(
+      token,
+      param,
+      commentId,
+    );
+    return comment;
+  }
+
+  @ApiPostResponse(getCommentResDto)
+  @ApiBearerAuth()
+  @Get('/commentDaetgeul/:param/:parentId') // param은 postId
+  async getCommenta(
+    @Headers('authorization') token: string,
+    @Param() { param, parentId }: getCommentReqDto,
+  ): Promise<any> {
+    console.log('************************************', token, param);
+    console.log(token, param, parentId);
+    const comment = await this.commentService.getCommenta(
+      token,
+      param,
+      parentId,
+    );
+    console.log('************************************getCommenta', comment);
+    return comment;
+  }
+
+  @ApiPostResponse(getCommentResDto)
+  @ApiBearerAuth()
+  @Get(':param') // param은 postId
+  async getComment(
+    @Headers('authorization') token: string,
+    @Param('param') param: string,
+    // @Param() { param }: getCommentReqDto,
+  ): Promise<any> {
+    console.log('************************************', token, param);
+    const comment = await this.commentService.getComment(token, param);
+    console.log('************************************getComment', comment);
+    const commentWithoutParentId = comment.filter((v) => v.parentId === null);
+    return commentWithoutParentId;
+  }
+
   @ApiPostResponse(getLikeCommentResDto)
   @ApiBearerAuth()
-  @Get(':param/:commentId')
+  @Get('/like/:param/:commentId')
   async getLikeComment(
     @Headers('authorization') token: string,
     @Param() { param, commentId }: getLikeCommentReqDto,
@@ -111,39 +159,6 @@ export class CommentController {
       createdAt: comment.createdAt,
       content: comment.content,
     };
-  }
-
-  @ApiPostResponse(getCommentResDto)
-  @ApiBearerAuth()
-  @Get(':param') // param은 postId
-  async getComment(
-    @Headers('authorization') token: string,
-    @Param('param') param: string,
-    // @Param() { param }: getCommentReqDto,
-  ): Promise<any> {
-    console.log('************************************', token, param);
-    const comment = await this.commentService.getComment(token, param);
-    console.log('************************************getComment', comment);
-    const commentWithoutParentId = comment.filter((v) => v.parentId === null);
-    return commentWithoutParentId;
-  }
-
-  @ApiPostResponse(getCommentResDto)
-  @ApiBearerAuth()
-  @Get(':param/:parentId') // param은 postId
-  async getCommenta(
-    @Headers('authorization') token: string,
-    @Param() { param, parentId }: getCommentReqDto,
-  ): Promise<any> {
-    console.log('************************************', token, param);
-    console.log(token, param, parentId);
-    const comment = await this.commentService.getCommenta(
-      token,
-      param,
-      parentId,
-    );
-    console.log('************************************getCommenta', comment);
-    return comment;
   }
 
   // @ApiBearerAuth()

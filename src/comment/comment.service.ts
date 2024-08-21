@@ -215,6 +215,49 @@ export class CommentService {
     return { heartOrNot: HeartOrNot.userId, count: likeCount, userId: user.id };
   }
 
+  async removeLikeComment(token: string, param: string, commentId: string) {
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+    // 댓글의 기존 좋아요 확인
+    const existingLike = await this.prismaService.commentOnUser.findUnique({
+      where: {
+        userId_likeId: {
+          userId: user.id,
+          likeId: commentId,
+        },
+      },
+    });
+
+    if (!existingLike) {
+      throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
+    }
+
+    const deleteLikeComment = await this.prismaService.commentOnUser.delete({
+      where: {
+        userId_likeId: {
+          userId: user.id,
+          likeId: commentId,
+        },
+      },
+    });
+
+    return deleteLikeComment;
+  }
+
   async getLikeComment(token: string, param: string, commentId: string) {
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
@@ -232,9 +275,16 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
-    const likeCount = await this.prismaService.commentOnUser.count({
-      where: { likeId: commentId },
-    });
+    // const likeCount = await this.prismaService.commentOnUser.count({
+    //   where: { likeId: commentId },
+    // });
+
+    // 댓글의 좋아요수 ==> 댓글아이디, 댓글좋아요사용자아이디
+    // const likeCount = await this.prismaService.commentOnUser.count({
+    //   where: {
+    //     likeId: commentId,
+    //   }
+    // })
 
     const HeartOrNot = await this.prismaService.commentOnUser.findUnique({
       where: {
@@ -245,10 +295,15 @@ export class CommentService {
       },
     });
 
-    console.log('heartornot', HeartOrNot.userId);
-    console.log('comment like count', likeCount);
+    console.log('**heartornot**', HeartOrNot);
+    console.log('heartornot', HeartOrNot?.userId);
+    // console.log('comment like count', likeCount);
 
-    return { heartOrNot: HeartOrNot.userId, count: likeCount, userId: user.id };
+    return {
+      userId: HeartOrNot?.userId,
+      likeId: HeartOrNot.likeId,
+      // count: likeCount,
+    };
   }
 
   async getComment(token: string, param: string) {
@@ -279,8 +334,10 @@ export class CommentService {
           select: {
             profile: true,
             name: true,
+            id: true,
           },
         },
+        likeUsers: true,
       },
     });
 
@@ -318,6 +375,11 @@ export class CommentService {
             createdAt,
             content,
             parentId,
+            commentLikeCount: await this.prismaService.commentOnUser.count({
+              where: {
+                likeId: id,
+              },
+            }),
             userId: await this.prismaService.commentOnUser.findUnique({
               where: {
                 userId_likeId: {

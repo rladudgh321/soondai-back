@@ -69,7 +69,11 @@ export class PostService {
   }
 
   async getPosts() {
-    const posts = await this.prismaService.post.findMany();
+    const posts = await this.prismaService.post.findMany({
+      include: {
+        comments: true,
+      },
+    });
     return posts;
   }
 

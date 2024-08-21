@@ -375,6 +375,11 @@ export class CommentService {
             createdAt,
             content,
             parentId,
+            commentCount: await this.prismaService.comment.count({
+              where: {
+                parentId: id,
+              },
+            }),
             commentLikeCount: await this.prismaService.commentOnUser.count({
               where: {
                 likeId: id,

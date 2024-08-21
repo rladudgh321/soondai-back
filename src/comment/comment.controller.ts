@@ -55,7 +55,7 @@ export class CommentController {
 
   // @ApiPostResponse()
   @ApiBearerAuth()
-  @Delete(':param/:commentId')
+  @Delete('/like/:param/:commentId')
   async removeLikeComment(
     @Headers('authorization') token: string,
     @Param() { param, commentId }: addLikeCommentReqDto,

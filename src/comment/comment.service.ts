@@ -246,12 +246,29 @@ export class CommentService {
       throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
     }
 
+    //로그인 유저 아이디 한정하여 삭제.. 다른 유저는 삭제 안됨
     const deleteLikeComment = await this.prismaService.commentOnUser.delete({
       where: {
         userId_likeId: {
           userId: user.id,
           likeId: commentId,
         },
+      },
+    });
+
+    // const comments = await this.prismaService.comment.findMany({
+    //   where: { parentId: commentId },
+    // });
+
+    // const comment = await this.prismaService.comment.findUnique({
+    //   where: { id: commentId },
+    // });
+
+    // const commentIds = comments.map((v) => v.id);
+
+    await this.prismaService.commentOnUser.deleteMany({
+      where: {
+        likeId: commentId,
       },
     });
 
@@ -279,28 +296,13 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
-    // const deleteLikeComment = await this.prismaService.commentOnUser.delete({
-    //   where: {
-    //     userId_likeId: {
-    //       userId: user.id,
-    //       likeId: commentId,
-    //     },
-    //   },
-    // });
-
-    // const comments = await this.prismaService.comment.findMany({
-    //   where: { parentId: commentId },
-    //   include: {
-    //     likeUsers: true,
-    //   },
-    // });
-
     const comments = await this.prismaService.comment.findMany({
       where: { parentId: commentId },
     });
 
     const commentIds = comments.map((v) => v.id);
 
+    //대댓글 좋아요 전부 삭제
     if (commentIds.length > 0) {
       const deleteLikeComment =
         await this.prismaService.commentOnUser.deleteMany({
@@ -596,13 +598,20 @@ export class CommentService {
     if (comment.userId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
 
-    await this.prismaService.comment.deleteMany({
+    const deleteManys = this.prismaService.comment.deleteMany({
       where: { parentId: commentId },
     });
 
-    await this.prismaService.comment.delete({
+    const deleteOne = this.prismaService.comment.delete({
       where: { id: comment.id },
     });
+
+    await Promise.all([deleteManys, deleteOne]);
+
+    // //다른 유저들의 좋아요 삭제
+    // await this.prismaService.commentOnUser.deleteMany({
+    //   where: { likeId: commentId },
+    // });
 
     return {
       postId: postId,

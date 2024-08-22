@@ -258,6 +258,64 @@ export class CommentService {
     return deleteLikeComment;
   }
 
+  async ifOriginremoveComment_removeWithItsParentId(
+    token: string,
+    param: string,
+    commentId: string,
+  ) {
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+    // const deleteLikeComment = await this.prismaService.commentOnUser.delete({
+    //   where: {
+    //     userId_likeId: {
+    //       userId: user.id,
+    //       likeId: commentId,
+    //     },
+    //   },
+    // });
+
+    // const comments = await this.prismaService.comment.findMany({
+    //   where: { parentId: commentId },
+    //   include: {
+    //     likeUsers: true,
+    //   },
+    // });
+
+    const comments = await this.prismaService.comment.findMany({
+      where: { parentId: commentId },
+    });
+
+    const commentIds = comments.map((v) => v.id);
+
+    if (commentIds.length > 0) {
+      const deleteLikeComment =
+        await this.prismaService.commentOnUser.deleteMany({
+          where: {
+            likeId: {
+              in: commentIds,
+            },
+          },
+        });
+      return deleteLikeComment;
+    } else {
+      return null;
+    }
+  }
+
   async getLikeComment(token: string, param: string, commentId: string) {
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
@@ -363,7 +421,7 @@ export class CommentService {
       comment.map(
         async ({
           id,
-          user: { profile, name },
+          user: { profile, name, id: loginUserId },
           createdAt,
           content,
           parentId,
@@ -375,6 +433,7 @@ export class CommentService {
             createdAt,
             content,
             parentId,
+            authorId: loginUserId,
             commentCount: await this.prismaService.comment.count({
               where: {
                 parentId: id,
@@ -469,6 +528,7 @@ export class CommentService {
       include: {
         user: {
           select: {
+            id: true,
             profile: true,
             name: true,
           },
@@ -478,17 +538,39 @@ export class CommentService {
 
     console.log('!!!!!!!!!!!');
 
-    return comment.map(
-      ({ id, user: { profile, name }, createdAt, content, parentId }) => {
-        return {
+    return Promise.all(
+      comment.map(
+        async ({
           id,
-          profile,
-          name,
+          user: { profile, name, id: loginUSerId },
           createdAt,
           content,
           parentId,
-        };
-      },
+        }) => {
+          return {
+            id,
+            profile,
+            name,
+            createdAt,
+            content,
+            parentId,
+            authorId: loginUSerId,
+            commentLikeCount: await this.prismaService.commentOnUser.count({
+              where: {
+                likeId: id,
+              },
+            }),
+            userId: await this.prismaService.commentOnUser.findUnique({
+              where: {
+                userId_likeId: {
+                  userId: user.id,
+                  likeId: id,
+                },
+              },
+            }),
+          };
+        },
+      ),
     );
   }
 

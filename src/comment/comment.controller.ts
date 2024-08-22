@@ -68,6 +68,22 @@ export class CommentController {
     return comment;
   }
 
+  // @ApiPostResponse()
+  @ApiBearerAuth()
+  @Delete('/origin/like/:param/:commentId')
+  async ifOriginremoveComment_removeWithItsParentId(
+    @Headers('authorization') token: string,
+    @Param() { param, commentId }: addLikeCommentReqDto,
+  ): Promise<any> {
+    const comment =
+      await this.commentService.ifOriginremoveComment_removeWithItsParentId(
+        token,
+        param,
+        commentId,
+      );
+    return comment;
+  }
+
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
   @Get('/commentDaetgeul/:param/:parentId') // param은 postId
@@ -82,8 +98,9 @@ export class CommentController {
       param,
       parentId,
     );
+    const commentWithParentId = comment.filter((v) => v.parentId !== null);
     console.log('************************************getCommenta', comment);
-    return comment;
+    return commentWithParentId;
   }
 
   @ApiPostResponse(getCommentResDto)

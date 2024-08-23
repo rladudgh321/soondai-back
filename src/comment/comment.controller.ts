@@ -70,6 +70,21 @@ export class CommentController {
 
   // @ApiPostResponse()
   @ApiBearerAuth()
+  @Delete('/post/like/:param/:commentId')
+  async ifDeletePost_deleteManyLike(
+    @Headers('authorization') token: string,
+    @Param() { param, commentId }: addLikeCommentReqDto,
+  ): Promise<any> {
+    const comment = await this.commentService.ifDeletePost_deleteManyLike(
+      token,
+      param,
+      commentId,
+    );
+    return comment;
+  }
+
+  // @ApiPostResponse()
+  @ApiBearerAuth()
   @Delete('/origin/like/:param/:commentId')
   async ifOriginremoveComment_removeWithItsParentId(
     @Headers('authorization') token: string,

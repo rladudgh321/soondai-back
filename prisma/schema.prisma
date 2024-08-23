@@ -72,6 +72,7 @@ model CommentOnUser {
   userId    String
   like      Comment @relation(fields: [likeId], references: [id])
   likeId    String  
+  postId    String  @default("postId")
   createdAt DateTime @default(now())
 
   @@id([userId, likeId])

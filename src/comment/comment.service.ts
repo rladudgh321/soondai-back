@@ -190,6 +190,7 @@ export class CommentService {
       data: {
         likeUsers: {
           create: {
+            postId: param,
             userId: user.id,
           },
         },
@@ -273,6 +274,51 @@ export class CommentService {
     });
 
     return deleteLikeComment;
+  }
+
+  async ifDeletePost_deleteManyLike(
+    token: string,
+    param: string,
+    commentId: string,
+  ) {
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+    // 댓글의 기존 좋아요 확인
+    const existingLike = await this.prismaService.commentOnUser.findUnique({
+      where: {
+        userId_likeId: {
+          userId: user.id,
+          likeId: commentId,
+        },
+      },
+    });
+
+    if (!existingLike) {
+      throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
+    }
+
+    const ifDeletePost_deleteManyLike =
+      await this.prismaService.commentOnUser.deleteMany({
+        where: {
+          postId: param,
+        },
+      });
+
+    return ifDeletePost_deleteManyLike;
   }
 
   async ifOriginremoveComment_removeWithItsParentId(

@@ -12,6 +12,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { CommentModule } from './comment/comment.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CommentModule } from './comment/comment.module';
     PostModule,
     AuthModule,
     CommentModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [

@@ -59,7 +59,11 @@ export class PostService {
         published,
         highlight,
         image,
-        category,
+        category: {
+          create: {
+            name: category,
+          },
+        },
         select,
         author: { connect: { id: user.id } },
         createdAt: alterTime,

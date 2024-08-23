@@ -47,7 +47,8 @@ model Post {
   highlight Boolean @default(false)
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
-  category  String   
+  category   Category?    @relation(fields: [categoryId], references: [id])
+  categoryId String?
   image     String?
   select    DateTime?
   comments  Comment[]
@@ -76,4 +77,10 @@ model CommentOnUser {
   createdAt DateTime @default(now())
 
   @@id([userId, likeId])
+}
+
+model Category {
+  id        String      @id @default(uuid())
+  name     String       @unique
+  posts   Post[]
 }

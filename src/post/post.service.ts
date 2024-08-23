@@ -72,6 +72,11 @@ export class PostService {
     const posts = await this.prismaService.post.findMany({
       include: {
         comments: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
     return posts;

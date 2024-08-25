@@ -81,6 +81,7 @@ export class PostService {
             name: true,
           },
         },
+        category: true,
       },
     });
     return posts;

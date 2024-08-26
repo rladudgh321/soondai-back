@@ -9,6 +9,7 @@ import {
   ParseFilePipeBuilder,
   Patch,
   Post,
+  Put,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -28,7 +29,7 @@ import {
   UpdatePostReqDto,
   addpostReqDto,
   getPostReqDto,
-  removePostReqDto
+  removePostReqDto,
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -101,7 +102,7 @@ export class PostController {
       category,
       select,
     }: addpostReqDto,
-  ): Promise<addpostResDto> {
+  ): Promise<any> {
     const post = await this.postService.addpost(
       title,
       content,
@@ -112,12 +113,7 @@ export class PostController {
       category,
       select,
     );
-    return {
-      id: post.authorId,
-      title: post.title,
-      content: post.content,
-      postId: post.id,
-    };
+    return post;
   }
 
   @ApiBearerAuth()
@@ -142,27 +138,65 @@ export class PostController {
 
   @ApiPostResponse(UpdatePostResDto)
   @ApiBearerAuth()
-  @Patch(':id')
+  @Put(':params')
   async updatePost(
-    @Param() { id }: UpdatePostReqDto,
+    @Param() { params }: UpdatePostReqDto,
+    @Headers('authorization') token: string,
     @Body()
-    { title, content, token }: UpdatePostReqDto,
-  ): Promise<UpdatePostResDto> {
-    const post = await this.postService.updatePost(id, title, content, token);
-    return { id, title: post.title, content: post.content };
+    {
+      title,
+      content,
+      published,
+      highlight,
+      image,
+      category,
+      select,
+    }: UpdatePostReqDto,
+  ): Promise<any> {
+    const post = await this.postService.updatePost(
+      params,
+      title,
+      content,
+      token,
+      published,
+      highlight,
+      image,
+      category,
+      select,
+    );
+    return post;
   }
 
   @ApiPostResponse(UpdatePostResDto)
   @ApiBearerAuth()
   @Roles(Role.Admin)
-  @Patch(':id/admin')
+  @Patch(':params/admin')
   async updatePostByAdmin(
-    @Param() { id }: UpdatePostReqDto,
+    @Param() { params }: UpdatePostReqDto,
+    @Headers('authorization') token: string,
     @Body()
-    { title, content, token }: UpdatePostReqDto,
-  ): Promise<UpdatePostResDto> {
-    const post = await this.postService.updatePost(id, title, content, token);
-    return { id, title: post.title, content: post.content };
+    {
+      title,
+      content,
+      published,
+      highlight,
+      image,
+      category,
+      select,
+    }: UpdatePostReqDto,
+  ): Promise<any> {
+    const post = await this.postService.updatePost(
+      params,
+      title,
+      content,
+      token,
+      published,
+      highlight,
+      image,
+      category,
+      select,
+    );
+    return { title: post.title, content: post.content };
   }
 
   // 경로 위치 조심

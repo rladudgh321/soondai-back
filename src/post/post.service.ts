@@ -28,6 +28,7 @@ export class PostService {
     category: string,
     select: Date,
   ) {
+    console.log('addPost category', category);
     const decoded = this.jwtService.verify(token, {
       secret: this.configService.get('jwt').secret,
     });
@@ -39,6 +40,50 @@ export class PostService {
       throw new NotFoundException('작성자를 찾을 수 없습니다.');
     }
 
+    // const currentTime = new Date();
+    // const alterTime = new Date(select);
+
+    // const hours = currentTime.getHours();
+    // const minutes = currentTime.getMinutes();
+    // const seconds = currentTime.getSeconds();
+    // const milliseconds = currentTime.getMilliseconds();
+
+    // alterTime.setHours(hours);
+    // alterTime.setMinutes(minutes);
+    // alterTime.setSeconds(seconds);
+    // alterTime.setMilliseconds(milliseconds);
+
+    const categoryExists = await this.prismaService.category.findUnique({
+      where: { id: category },
+    });
+
+    if (!categoryExists) {
+      throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
+    }
+
+    const alterTime = this.createDateMaker(select);
+
+    const post = await this.prismaService.post.create({
+      data: {
+        title,
+        content,
+        published,
+        highlight,
+        image,
+        category: {
+          connect: {
+            id: category,
+          },
+        },
+        select,
+        author: { connect: { id: user.id } },
+        createdAt: alterTime,
+      },
+    });
+    return post;
+  }
+
+  createDateMaker(select: Date) {
     const currentTime = new Date();
     const alterTime = new Date(select);
 
@@ -52,24 +97,7 @@ export class PostService {
     alterTime.setSeconds(seconds);
     alterTime.setMilliseconds(milliseconds);
 
-    const post = await this.prismaService.post.create({
-      data: {
-        title,
-        content,
-        published,
-        highlight,
-        image,
-        category: {
-          create: {
-            name: category,
-          },
-        },
-        select,
-        author: { connect: { id: user.id } },
-        createdAt: alterTime,
-      },
-    });
-    return post;
+    return alterTime;
   }
 
   async getPosts() {
@@ -134,33 +162,67 @@ export class PostService {
     return removePost;
   }
 
-  async updatePost(id: string, title: string, content: string, token: string) {
-    const post = await this.prismaService.post.findUnique({ where: { id } });
+  async updatePost(
+    params: string,
+    title: string,
+    content: string,
+    token: string,
+    published: boolean,
+    highlight: boolean,
+    image: string,
+    category: string,
+    select: Date,
+  ) {
+    console.log('select****', select);
+
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const post = await this.prismaService.post.findUnique({
+      where: { id: params },
+    });
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
 
-    const userId = this.jwtService.decode(token).sub;
-
-    const user = await this.userService.findOne(userId);
-
     if (user.role === Role.Admin) {
-      return this.updatePostByAdmin(id, title, content, token);
+      return this.updatePostByAdmin(params, title, content, token);
     }
 
-    if (post.authorId !== userId)
+    if (post.authorId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
+
+    // Check if the category exists
+    const existingCategory = await this.prismaService.category.findUnique({
+      where: { id: category },
+    });
+
+    if (!existingCategory) {
+      throw new NotFoundException('카테고리가 존재하지 않습니다');
+    }
 
     const updatePost = await this.prismaService.post.update({
       where: {
-        id,
+        id: params,
       },
       data: {
         title,
         content,
-      },
-      include: {
-        author: true,
+        published,
+        highlight,
+        image,
+        category: {
+          connect: {
+            id: category,
+          },
+        },
+        select,
+        createdAt: this.createDateMaker(select),
       },
     });
+
+    console.log('updatePost****', updatePost);
 
     return updatePost;
   }

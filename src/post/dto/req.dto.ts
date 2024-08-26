@@ -40,7 +40,7 @@ export class removePostReqDto {
 
 export class UpdatePostReqDto {
   @ApiProperty({ required: true, title: 'postId' })
-  id: string;
+  params: string;
 
   @ApiPropertyOptional({
     title: 'update title',
@@ -54,12 +54,24 @@ export class UpdatePostReqDto {
   })
   content: string;
 
-  @ApiProperty({
-    title: 'token',
-    example:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5NTNkY2I1OS0wNWU2LTRmZmMtODBjMC01MGRhMDIwYzE0ZWIiLCJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3MTc4MTAwNTUsImV4cCI6MTcxNzg5NjQ1NX0.vNX8WwING54eSicUgzvmgKBQttMY56INV9KlRskhDQ8',
+  @ApiProperty({ required: true, title: '공개여부' })
+  published: boolean;
+
+  @ApiProperty({ required: true, title: '하이라이트 여부' })
+  highlight: boolean;
+
+  @ApiPropertyOptional({
+    title: '게시글 대표이미지',
   })
-  token: string;
+  image: string;
+
+  @ApiProperty({ required: true, title: '카테고리' })
+  category: string;
+
+  @ApiPropertyOptional({
+    title: '날짜 선택',
+  })
+  select: Date;
 }
 
 export class getPostReqDto {

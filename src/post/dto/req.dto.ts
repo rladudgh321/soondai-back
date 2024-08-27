@@ -98,3 +98,8 @@ export class UploadImageReqDto {
   @ApiProperty({ required: true, type: 'string', format: 'binary' })
   file: string;
 }
+
+export class getPostsReqDto {
+  @ApiPropertyOptional({ title: '카테고리아이디' })
+  categoryId: string;
+}

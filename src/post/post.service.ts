@@ -100,19 +100,50 @@ export class PostService {
     return alterTime;
   }
 
-  async getPosts() {
-    const posts = await this.prismaService.post.findMany({
-      include: {
-        comments: true,
-        author: {
-          select: {
-            name: true,
-          },
-        },
-        category: true,
+  async getPosts(categoryId: string) {
+    const category = await this.prismaService.category.findUnique({
+      where: {
+        id: categoryId,
       },
     });
-    return posts;
+
+    if (categoryId !== category?.id) {
+      const posts = await this.prismaService.post.findMany({
+        include: {
+          comments: true,
+          author: {
+            select: {
+              name: true,
+            },
+          },
+          category: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      return posts;
+    } else {
+      // category 1: N post
+      const posts = await this.prismaService.post.findMany({
+        where: {
+          categoryId,
+        },
+        include: {
+          comments: true,
+          author: {
+            select: {
+              name: true,
+            },
+          },
+          category: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      return posts;
+    }
   }
 
   async getPost(id: string, token: string) {

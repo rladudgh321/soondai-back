@@ -29,6 +29,7 @@ import {
   UpdatePostReqDto,
   addpostReqDto,
   getPostReqDto,
+  getPostsReqDto,
   removePostReqDto,
 } from './dto/req.dto';
 import {
@@ -46,10 +47,9 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Public()
-  @ApiBearerAuth()
-  @Get('getposts')
-  async getPosts() {
-    const posts = await this.postService.getPosts();
+  @Get('getposts/:categoryId')
+  async getPosts(@Param() { categoryId }: getPostsReqDto): Promise<any> {
+    const posts = await this.postService.getPosts(categoryId);
     return posts;
   }
 

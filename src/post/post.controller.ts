@@ -29,8 +29,7 @@ import {
   UpdatePostReqDto,
   addpostReqDto,
   getPostReqDto,
-  getPostsReqDto,
-  removePostReqDto,
+  removePostReqDto
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -47,9 +46,9 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Public()
-  @Get('getposts/:categoryId')
-  async getPosts(@Param() { categoryId }: getPostsReqDto): Promise<any> {
-    const posts = await this.postService.getPosts(categoryId);
+  @Get('getposts')
+  async getPosts(): Promise<any> {
+    const posts = await this.postService.getPosts();
     return posts;
   }
 

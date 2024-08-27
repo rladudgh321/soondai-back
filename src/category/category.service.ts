@@ -48,6 +48,19 @@ export class CategoryService {
     return category;
   }
 
+  //nav에서 categoryId를 보내면 카테고리 이름 하나 보내도록하기
+  async getCategory(categoryId: string) {
+    const category = await this.prismaService.category.findUnique({
+      where: {
+        id: categoryId,
+      },
+    });
+
+    if (!category) throw new NotFoundException('카테고리를 찾지 못하였습니다');
+
+    return category.name;
+  }
+
   async removeCategory(token: string, categoryId: string) {
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,

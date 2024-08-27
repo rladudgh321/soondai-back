@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Headers, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/common/decorator/public.decorator';
 import {
   ApiPostResponse
 } from 'src/common/decorator/swagger.decorator';
@@ -24,12 +25,22 @@ export class CategoryController {
     return { name: category.name };
   }
 
+  // Nav에서 CategoryId를 보내면 카테고리 이름을 보내도록하기
+  @ApiBearerAuth()
+  @Public()
+  @Get('/nav/:categoryId')
+  async getCategory(@Param('categoryId') categoryId: string) {
+    const category = await this.categoryService.getCategory(categoryId);
+    return category;
+  }
+
   @ApiBearerAuth()
   @Get('/')
   async getCategories(@Headers('authorization') token: string) {
     const category = await this.categoryService.getCategories(token);
     return category;
   }
+
 
   @ApiBearerAuth()
   @Delete(':categoryId')

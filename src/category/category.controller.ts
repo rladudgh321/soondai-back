@@ -35,9 +35,10 @@ export class CategoryController {
   }
 
   @ApiBearerAuth()
+  @Public()
   @Get('/')
-  async getCategories(@Headers('authorization') token: string) {
-    const category = await this.categoryService.getCategories(token);
+  async getCategories() {
+    const category = await this.categoryService.getCategories();
     return category;
   }
 

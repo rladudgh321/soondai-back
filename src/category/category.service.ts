@@ -32,17 +32,7 @@ export class CategoryService {
     return addCategory;
   }
 
-  async getCategories(token: string) {
-    const decoded = this.jwtService.verify(token.slice(7), {
-      secret: this.configService.get('jwt').secret,
-    });
-
-    const user = this.userService.findOne(decoded.sub);
-
-    if (!user) {
-      throw new NotFoundException('작성자를 찾을 수 습니다.');
-    }
-
+  async getCategories() {
     const category = await this.prismaService.category.findMany();
 
     return category;

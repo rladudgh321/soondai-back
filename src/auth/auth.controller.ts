@@ -3,7 +3,7 @@ import {
   Controller,
   Headers,
   Post,
-  UnauthorizedException
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -11,7 +11,7 @@ import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { User, UserAfterAuth } from 'src/common/decorator/user.decorator';
 import { AuthService } from './auth.service';
 import { SignUpReqDto, SigninReqDto } from './dto/req.dto';
-import { RefreshTokenResDto, SignUpResDto, SignInResDto } from './dto/res.dto';
+import { RefreshTokenResDto, SignInResDto, SignUpResDto } from './dto/res.dto';
 
 @ApiTags('auth')
 @ApiExtraModels(SignUpReqDto, SignUpResDto)
@@ -40,7 +40,9 @@ export class AuthController {
   @ApiPostResponse(SignInResDto)
   @Public()
   @Post('signin')
-  async signin(@Body() { email, password }: SigninReqDto): Promise<SignInResDto> {
+  async signin(
+    @Body() { email, password }: SigninReqDto,
+  ): Promise<SignInResDto> {
     return this.authService.signin(email, password);
   }
 

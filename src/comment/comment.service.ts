@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -412,18 +411,26 @@ export class CommentService {
     };
   }
 
-  async getComment(token: string, param: string) {
+  async getComment(token: string | null, param: string) {
     console.log('****back token, param', token, param);
-    const decoded = this.jwtService.verify(token.slice(7), {
-      secret: this.configService.get('jwt').secret,
-    });
-    const user = await this.prismaService.user.findUnique({
-      where: { id: decoded.sub },
-    });
+    let user = null;
+    let decoded = null;
 
-    if (!user) {
-      throw new NotFoundException('작성자를 찾을 수 습니다.');
+    if (token !== 'Bearer null') {
+      console.log('토큰 있을 경우', token);
+      decoded = this.jwtService.verify(token?.slice(7), {
+        secret: this.configService.get('jwt').secret,
+      });
+      user = await this.prismaService.user.findUnique({
+        where: { id: decoded?.sub },
+      });
+      console.log('user null', user);
+    } else {
+      console.log('토큰 없을 경우');
+      console.log('token', token);
+      user = null;
     }
+
     const post = await this.prismaService.post.findUnique({
       where: {
         id: param,
@@ -451,17 +458,17 @@ export class CommentService {
 
     // commentOnUser의 userId 값을 추가해서 리턴해주기
 
-    comment.map(
-      async (v) =>
-        await this.prismaService.commentOnUser.findUnique({
-          where: {
-            userId_likeId: {
-              userId: user.id,
-              likeId: v.id,
-            },
-          },
-        }),
-    );
+    // comment.map(
+    //   async (v) =>
+    //     await this.prismaService.commentOnUser.findUnique({
+    //       where: {
+    //         userId_likeId: {
+    //           userId: user?.id,
+    //           likeId: v.id,
+    //         },
+    //       },
+    //     }),
+    // );
 
     // return할 곳에 likers: [{id:1}, {id:2}] 형식으로 리턴을해라
 
@@ -474,6 +481,15 @@ export class CommentService {
           content,
           parentId,
         }) => {
+          const userId = await this.prismaService.commentOnUser.findUnique({
+            where: {
+              userId_likeId: {
+                userId: user?.id,
+                likeId: id,
+              },
+            },
+          });
+          console.log('Promise userId', userId);
           return {
             id,
             profile,
@@ -492,14 +508,7 @@ export class CommentService {
                 likeId: id,
               },
             }),
-            userId: await this.prismaService.commentOnUser.findUnique({
-              where: {
-                userId_likeId: {
-                  userId: user.id,
-                  likeId: id,
-                },
-              },
-            }),
+            userId,
           };
         },
       ),
@@ -552,16 +561,21 @@ export class CommentService {
 
   async getCommenta(token: string, param: string, parentId: string) {
     console.log('****back token, param', token, param);
-    const decoded = this.jwtService.verify(token.slice(7), {
-      secret: this.configService.get('jwt').secret,
-    });
-    const user = await this.prismaService.user.findUnique({
-      where: { id: decoded.sub },
-    });
 
-    if (!user) {
-      throw new NotFoundException('작성자를 찾을 수 습니다.');
+    let user = null;
+    let decoded = null;
+
+    if (token !== 'Bearer null') {
+      console.log('토큰 있을 경우', token);
+      decoded = this.jwtService.verify(token?.slice(7), {
+        secret: this.configService.get('jwt').secret,
+      });
+      user = await this.prismaService.user.findUnique({
+        where: { id: decoded?.sub },
+      });
+      console.log('user null', user);
     }
+
     const post = await this.prismaService.post.findUnique({
       where: {
         id: param,
@@ -595,6 +609,17 @@ export class CommentService {
           content,
           parentId,
         }) => {
+          const userId = user?.id
+            ? await this.prismaService.commentOnUser.findUnique({
+                where: {
+                  userId_likeId: {
+                    userId: user.id,
+                    likeId: id,
+                  },
+                },
+              })
+            : null;
+          console.log('commenta Promise userId', userId);
           return {
             id,
             profile,
@@ -608,14 +633,7 @@ export class CommentService {
                 likeId: id,
               },
             }),
-            userId: await this.prismaService.commentOnUser.findUnique({
-              where: {
-                userId_likeId: {
-                  userId: user.id,
-                  likeId: id,
-                },
-              },
-            }),
+            userId,
           };
         },
       ),

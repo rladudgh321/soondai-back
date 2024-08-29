@@ -10,6 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/common/decorator/public.decorator';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CommentService } from './comment.service';
@@ -101,6 +102,7 @@ export class CommentController {
 
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
+  @Public()
   @Get('/commentDaetgeul/:param/:parentId') // param은 postId
   async getCommenta(
     @Headers('authorization') token: string,
@@ -120,9 +122,10 @@ export class CommentController {
 
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
+  @Public()
   @Get(':param') // param은 postId
   async getComment(
-    @Headers('authorization') token: string,
+    @Headers('authorization') token: string | null,
     @Param('param') param: string,
     // @Param() { param }: getCommentReqDto,
   ): Promise<any> {

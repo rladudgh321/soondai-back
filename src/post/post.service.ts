@@ -275,4 +275,20 @@ export class PostService {
     console.log('file path', file);
     return file.path;
   }
+
+  async pagenationFindAll(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      this.prismaService.post.findMany({
+        skip,
+        take: limit,
+      }),
+      this.prismaService.post.count(),
+    ]);
+
+    return {
+      items,
+      total,
+    };
+  }
 }

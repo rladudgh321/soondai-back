@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -29,7 +30,8 @@ import {
   UpdatePostReqDto,
   addpostReqDto,
   getPostReqDto,
-  removePostReqDto
+  pagenationReqDto,
+  removePostReqDto,
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -50,6 +52,14 @@ export class PostController {
   async getPosts(): Promise<any> {
     const posts = await this.postService.getPosts();
     return posts;
+  }
+
+  @Public()
+  @Get('/pagination?page')
+  async pagenationFindAll(
+    @Query() { page = 1, limit = 10 }: pagenationReqDto,
+  ): Promise<any> {
+    return this.postService.pagenationFindAll(page, limit);
   }
 
   @Public()
@@ -200,7 +210,6 @@ export class PostController {
 
   // 경로 위치 조심
   @Public()
-  @ApiBearerAuth()
   @Post(':id')
   async getPost(
     @Param() { id }: getPostReqDto,

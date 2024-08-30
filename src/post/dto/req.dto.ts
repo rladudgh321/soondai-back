@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min } from 'class-validator';
 
 export class addpostReqDto {
   @ApiProperty({ required: true, example: '제목' })
@@ -102,4 +104,20 @@ export class UploadImageReqDto {
 export class getPostsReqDto {
   @ApiPropertyOptional({ title: '카테고리아이디' })
   categoryId: string;
+}
+
+export class pagenationReqDto {
+  @ApiPropertyOptional({ title: '페이지' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  readonly page?: number;
+
+  @ApiPropertyOptional({ title: '한페이지당 게시글 최대갯수' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  readonly limit?: number;
 }

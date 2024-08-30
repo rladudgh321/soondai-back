@@ -55,7 +55,7 @@ export class PostController {
   }
 
   @Public()
-  @Get('/pagination?page')
+  @Get('/pagination')
   async pagenationFindAll(
     @Query() { page = 1, limit = 10 }: pagenationReqDto,
   ): Promise<any> {

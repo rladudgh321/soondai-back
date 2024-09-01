@@ -276,19 +276,46 @@ export class PostService {
     return file.path;
   }
 
-  async pagenationFindAll(page: number, limit: number) {
+  async pagenationFindAll(page: number, limit: number, category?: string) {
     const skip = (page - 1) * limit;
-    const [items, total] = await Promise.all([
-      this.prismaService.post.findMany({
+
+    if (category) {
+      const findCategoryAll = this.prismaService.post.findMany({
+        where: {
+          categoryId: category,
+        },
         skip,
         take: limit,
-      }),
-      this.prismaService.post.count(),
-    ]);
+      });
+      const totalCategory = this.prismaService.post.count({
+        where: {
+          categoryId: category,
+        },
+      });
 
-    return {
-      items,
-      total,
-    };
+      const [items, total] = await Promise.all([
+        findCategoryAll,
+        totalCategory,
+      ]);
+
+      return {
+        items,
+        total,
+      };
+    } else {
+      const posts = this.prismaService.post.findMany({
+        skip,
+        take: limit,
+      });
+
+      const [items, total] = await Promise.all([
+        posts,
+        this.prismaService.post.count(),
+      ]);
+      return {
+        items,
+        total,
+      };
+    }
   }
 }

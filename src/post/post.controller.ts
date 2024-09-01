@@ -57,9 +57,9 @@ export class PostController {
   @Public()
   @Get('/pagination')
   async pagenationFindAll(
-    @Query() { page = 1, limit = 10 }: pagenationReqDto,
+    @Query() { page = 1, limit = 10, category }: pagenationReqDto,
   ): Promise<any> {
-    return this.postService.pagenationFindAll(page, limit);
+    return this.postService.pagenationFindAll(page, limit, category);
   }
 
   @Public()

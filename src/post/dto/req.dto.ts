@@ -120,4 +120,7 @@ export class pagenationReqDto {
   @IsInt()
   @Min(1)
   readonly limit?: number;
+
+  @ApiPropertyOptional({ title: '카테고리 아이디' })
+  category: string;
 }

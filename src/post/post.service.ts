@@ -1,3 +1,4 @@
+import * as dayjs from 'dayjs';
 import {
   BadRequestException,
   Injectable,
@@ -27,6 +28,8 @@ export class PostService {
     image: string,
     category: string,
     select: Date,
+    date_hour?: number,
+    date_minute?: number,
   ) {
     console.log('addPost category', category);
     const decoded = this.jwtService.verify(token, {
@@ -61,7 +64,31 @@ export class PostService {
       throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
     }
 
-    const alterTime = this.createDateMaker(select);
+    // date_hour가 있으면 select에 녹여서 alterTime을 바로 보내고
+    // date_hour가 없으면 기존 코드를 사용하여 현재시간을 사용하자
+
+    let alterTime = null;
+    const selectDate = new Date(select);
+    const date = dayjs(selectDate).format();
+    const hello = new Date(date);
+    hello.setHours(hello.getHours() + 9);
+    hello.setHours(date_hour);
+    hello.setMinutes(date_minute);
+
+    date_hour && date_minute
+      ? (alterTime = hello)
+      : (alterTime = this.createDateMaker(select));
+
+    console.log('alterTime', alterTime);
+
+    // if (date_hour && date_minute) {
+    // selectDate.setHours(date_hour);
+    // selectDate.setHours(selectDate.getHours() + date_hour);
+    // selectDate.setMinutes(date_minute);
+    // alterTime = new Date(date);
+    // alterTime.setHours(alter);
+    // console.log('after select', date, alterTime.toISOString());
+    // }
 
     const post = await this.prismaService.post.create({
       data: {
@@ -78,6 +105,7 @@ export class PostService {
         select,
         author: { connect: { id: user.id } },
         createdAt: alterTime,
+        updatedAt: alterTime,
       },
     });
     return post;
@@ -97,6 +125,9 @@ export class PostService {
     alterTime.setSeconds(seconds);
     alterTime.setMilliseconds(milliseconds);
 
+    console.log('currentTime', currentTime);
+    alterTime.setHours(alterTime.getHours() + 9);
+    console.log('alterTime', alterTime);
     return alterTime;
   }
 
@@ -286,6 +317,9 @@ export class PostService {
         },
         skip,
         take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
       const totalCategory = this.prismaService.post.count({
         where: {
@@ -306,6 +340,9 @@ export class PostService {
       const posts = this.prismaService.post.findMany({
         skip,
         take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
 
       const [items, total] = await Promise.all([

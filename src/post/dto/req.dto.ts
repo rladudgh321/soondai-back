@@ -30,6 +30,12 @@ export class addpostReqDto {
 
   @ApiPropertyOptional({ title: '선택 날짜' })
   select?: Date;
+
+  @ApiPropertyOptional({ title: '선택 시간' })
+  date_hour?: number | null;
+
+  @ApiPropertyOptional({ title: '선택 분' })
+  date_minute?: number | null;
 }
 
 export class removePostReqDto {

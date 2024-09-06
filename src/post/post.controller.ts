@@ -40,6 +40,7 @@ import {
   addpostResDto,
 } from './dto/res.dto';
 import { PostService } from './post.service';
+import { convertToKoreanTimezone } from 'src/common/utils/time.utils';
 
 @ApiTags('post')
 @ApiExtraModels(addpostResDto, UpdatePostResDto)
@@ -111,8 +112,11 @@ export class PostController {
       image,
       category,
       select,
+      date_hour,
+      date_minute,
     }: addpostReqDto,
   ): Promise<any> {
+    console.log('select', select);
     const post = await this.postService.addpost(
       title,
       content,
@@ -122,6 +126,8 @@ export class PostController {
       image,
       category,
       select,
+      date_hour,
+      date_minute,
     );
     return post;
   }

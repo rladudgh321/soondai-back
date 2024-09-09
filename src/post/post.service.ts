@@ -10,6 +10,10 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role } from 'src/user/enum/role.enum';
 import { UserService } from 'src/user/user.service';
+import * as timezone from 'dayjs/plugin/timezone';
+import * as utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 @Injectable()
 export class PostService {
@@ -43,19 +47,6 @@ export class PostService {
       throw new NotFoundException('작성자를 찾을 수 없습니다.');
     }
 
-    // const currentTime = new Date();
-    // const alterTime = new Date(select);
-
-    // const hours = currentTime.getHours();
-    // const minutes = currentTime.getMinutes();
-    // const seconds = currentTime.getSeconds();
-    // const milliseconds = currentTime.getMilliseconds();
-
-    // alterTime.setHours(hours);
-    // alterTime.setMinutes(minutes);
-    // alterTime.setSeconds(seconds);
-    // alterTime.setMilliseconds(milliseconds);
-
     const categoryExists = await this.prismaService.category.findUnique({
       where: { id: category },
     });
@@ -64,31 +55,26 @@ export class PostService {
       throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
     }
 
-    // date_hour가 있으면 select에 녹여서 alterTime을 바로 보내고
-    // date_hour가 없으면 기존 코드를 사용하여 현재시간을 사용하자
-
     let alterTime = null;
-    const selectDate = new Date(select);
-    const date = dayjs(selectDate).format();
-    const hello = new Date(date);
-    hello.setHours(hello.getHours() + 9);
-    hello.setHours(date_hour);
-    hello.setMinutes(date_minute);
 
-    date_hour && date_minute
-      ? (alterTime = hello)
-      : (alterTime = this.createDateMaker(select));
+    const selectDate = dayjs(select).tz('Asia/Seoul');
 
+    if (!!date_hour && !!date_minute) {
+      alterTime = selectDate
+        .hour(date_hour)
+        .minute(date_minute)
+        // .second(0) // Optional: set seconds to 0 if needed
+        .toDate(); // Convert to local time
+      console.log('alterTimealterTime', dayjs(alterTime).format());
+    } else {
+      alterTime = dayjs(this.createDateMaker(select)).toDate();
+    }
+    const date = dayjs(alterTime).format();
+    console.log('alterTime (Local Time)', dayjs(alterTime).format());
+    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
+    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
     console.log('alterTime', alterTime);
-
-    // if (date_hour && date_minute) {
-    // selectDate.setHours(date_hour);
-    // selectDate.setHours(selectDate.getHours() + date_hour);
-    // selectDate.setMinutes(date_minute);
-    // alterTime = new Date(date);
-    // alterTime.setHours(alter);
-    // console.log('after select', date, alterTime.toISOString());
-    // }
+    console.log('date', date);
 
     const post = await this.prismaService.post.create({
       data: {
@@ -126,7 +112,7 @@ export class PostService {
     alterTime.setMilliseconds(milliseconds);
 
     console.log('currentTime', currentTime);
-    alterTime.setHours(alterTime.getHours() + 9);
+    // alterTime.setHours(alterTime.getHours() + 9);
     console.log('alterTime', alterTime);
     return alterTime;
   }
@@ -206,6 +192,8 @@ export class PostService {
     image: string,
     category: string,
     select: Date,
+    date_hour?: number,
+    date_minute?: number,
   ) {
     console.log('select****', select);
 
@@ -236,6 +224,27 @@ export class PostService {
       throw new NotFoundException('카테고리가 존재하지 않습니다');
     }
 
+    let alterTime = null;
+
+    const selectDate = dayjs(select).tz('Asia/Seoul');
+
+    if (!!date_hour && !!date_minute) {
+      alterTime = selectDate
+        .hour(date_hour)
+        .minute(date_minute)
+        // .second(0) // Optional: set seconds to 0 if needed
+        .toDate(); // Convert to local time
+      console.log('alterTimealterTime', dayjs(alterTime).format());
+    } else {
+      alterTime = dayjs(post.createdAt).toDate();
+    }
+    const date = dayjs(alterTime).format();
+    console.log('alterTime (Local Time)', dayjs(alterTime).format());
+    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
+    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
+    console.log('alterTime', alterTime);
+    console.log('date', date);
+
     const updatePost = await this.prismaService.post.update({
       where: {
         id: params,
@@ -252,7 +261,8 @@ export class PostService {
           },
         },
         select,
-        createdAt: this.createDateMaker(select),
+        createdAt: alterTime,
+        updatedAt: dayjs(Date.now()).toDate(),
       },
     });
 

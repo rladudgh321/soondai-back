@@ -167,6 +167,8 @@ export class PostController {
       image,
       category,
       select,
+      date_hour,
+      date_minute,
     }: UpdatePostReqDto,
   ): Promise<any> {
     const post = await this.postService.updatePost(
@@ -179,6 +181,8 @@ export class PostController {
       image,
       category,
       select,
+      date_hour,
+      date_minute,
     );
     return post;
   }

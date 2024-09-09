@@ -19,12 +19,6 @@ export class RemovePostResDto {
   @ApiProperty({ required: true, title: 'deleted UUID' })
   @IsUUID()
   id: string;
-
-  @ApiProperty({ required: true, title: 'deleted Title' })
-  title: string;
-
-  @ApiProperty({ required: true, title: 'deleted content' })
-  content: string;
 }
 
 export class UpdatePostResDto {

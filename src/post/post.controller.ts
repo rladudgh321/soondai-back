@@ -140,7 +140,7 @@ export class PostController {
   ): Promise<RemovePostResDto> {
     console.log('delete', id);
     const post = await this.postService.removePost(id, data);
-    return { id: post.id, title: post.title, content: post.content };
+    return { id: post.id };
   }
 
   @ApiBearerAuth()

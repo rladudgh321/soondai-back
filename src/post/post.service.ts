@@ -169,8 +169,6 @@ export class PostService {
     const removePost = await this.prismaService.post.delete({ where: { id } });
     return {
       id: removePost.id,
-      title: removePost.title,
-      content: removePost.content,
     };
   }
 

@@ -10,8 +10,14 @@ export class addCommentReqDto {
   @ApiProperty({ required: true, title: '댓글', example: '댓글입니다' })
   content: string;
 
-  @ApiPropertyOptional({ title: '선택 시간' })
+  @ApiPropertyOptional({ title: '선택 연월일' })
   select?: Date;
+
+  @ApiPropertyOptional({ title: '선택 시간' })
+  date_hour?: number;
+
+  @ApiPropertyOptional({ title: '선택 분' })
+  date_minute?: number;
 }
 
 export class getCommentReqDto {

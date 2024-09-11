@@ -30,8 +30,7 @@ import {
   UpdatePostReqDto,
   addpostReqDto,
   getPostReqDto,
-  pagenationReqDto,
-  removePostReqDto,
+  pagenationReqDto
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -40,7 +39,6 @@ import {
   addpostResDto,
 } from './dto/res.dto';
 import { PostService } from './post.service';
-import { convertToKoreanTimezone } from 'src/common/utils/time.utils';
 
 @ApiTags('post')
 @ApiExtraModels(addpostResDto, UpdatePostResDto)
@@ -143,14 +141,14 @@ export class PostController {
     return { id: post.id };
   }
 
-  @ApiBearerAuth()
-  @Roles(Role.Admin)
-  @Delete(':id/admin')
-  async removePostByAdmin(@Param() { id }: removePostReqDto) {
-    console.log('delete', id);
-    const post = await this.postService.removePostByAdmin(id);
-    return post;
-  }
+  // @ApiBearerAuth()
+  // @Roles(Role.Admin)
+  // @Delete(':id/admin')
+  // async removePostByAdmin(@Param() { id }: removePostReqDto) {
+  //   console.log('delete', id);
+  //   const post = await this.postService.removePostByAdmin(id);
+  //   return post;
+  // }
 
   @ApiPostResponse(UpdatePostResDto)
   @ApiBearerAuth()

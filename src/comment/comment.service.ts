@@ -6,9 +6,15 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import * as dayjs from 'dayjs';
+import * as timezone from 'dayjs/plugin/timezone';
+import * as utc from 'dayjs/plugin/utc';
+import { PostService } from 'src/post/post.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role } from 'src/user/enum/role.enum';
 import { UserService } from 'src/user/user.service';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 @Injectable()
 export class CommentService {
@@ -17,6 +23,7 @@ export class CommentService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
+    private readonly postService: PostService,
   ) {}
 
   async addComment(
@@ -24,6 +31,8 @@ export class CommentService {
     token: string,
     param: string,
     select: Date,
+    date_hour: number,
+    date_minute: number,
   ) {
     console.log('addComment content', content);
     if (content.length === 0) {
@@ -46,18 +55,26 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
-    const currentTime = new Date();
-    const alterTime = new Date(select);
+    let alterTime = null;
 
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-    const seconds = currentTime.getSeconds();
-    const milliseconds = currentTime.getMilliseconds();
+    const selectDate = dayjs(select).tz('Asia/Seoul');
 
-    alterTime.setHours(hours);
-    alterTime.setMinutes(minutes);
-    alterTime.setSeconds(seconds);
-    alterTime.setMilliseconds(milliseconds);
+    if (!!date_hour && !!date_minute) {
+      alterTime = selectDate
+        .hour(date_hour)
+        .minute(date_minute)
+        // .second(0) // Optional: set seconds to 0 if needed
+        .toDate(); // Convert to local time
+      console.log('alterTimealterTime', dayjs(alterTime).format());
+    } else {
+      alterTime = dayjs(this.postService.createDateMaker(select)).toDate();
+    }
+    const date = dayjs(alterTime).format();
+    console.log('alterTime (Local Time)', dayjs(alterTime).format());
+    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
+    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
+    console.log('alterTime', alterTime);
+    console.log('date', date);
 
     const comment = await this.prismaService.comment.create({
       data: {

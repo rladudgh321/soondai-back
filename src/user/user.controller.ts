@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Param, Query, Req, Headers } from '@nestjs/common';
+import { Controller, Get, Headers, Logger, Param, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import {
@@ -7,11 +7,11 @@ import {
 } from 'src/common/decorator/swagger.decorator';
 import { User, UserAfterAuth } from 'src/common/decorator/user.decorator';
 import { PageReqDto } from 'src/common/dto/req.dto';
+import { PageResDto } from 'src/common/dto/res.dto';
 import { FindUserReqDto } from './dto/req.dto';
 import { FindUserResDto, GetUserIdResDto } from './dto/res.dto';
 import { Role } from './enum/role.enum';
 import { UserService } from './user.service';
-import { PageResDto } from 'src/common/dto/res.dto';
 @ApiTags('user')
 @Controller('user')
 export class UserController {
@@ -43,7 +43,7 @@ export class UserController {
     @Headers('authorization') token: string,
   ): Promise<GetUserIdResDto> {
     const user = await this.userService.getUserId(token);
-    return { id: user.id };
+    return { id: user.id, role: user.role };
   }
 
   @ApiGetResponse(FindUserResDto)

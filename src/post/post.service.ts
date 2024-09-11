@@ -1,4 +1,3 @@
-import * as dayjs from 'dayjs';
 import {
   BadRequestException,
   Injectable,
@@ -7,11 +6,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import * as dayjs from 'dayjs';
+import * as timezone from 'dayjs/plugin/timezone';
+import * as utc from 'dayjs/plugin/utc';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role } from 'src/user/enum/role.enum';
 import { UserService } from 'src/user/user.service';
-import * as timezone from 'dayjs/plugin/timezone';
-import * as utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -173,9 +173,6 @@ export class PostService {
   }
 
   async removePostByAdmin(id: string) {
-    const post = await this.prismaService.post.findUnique({ where: { id } });
-    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-
     const removePost = await this.prismaService.post.delete({ where: { id } });
     return removePost;
   }

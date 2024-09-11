@@ -116,7 +116,6 @@ export class CommentController {
       parentId,
     );
     const commentWithParentId = comment.filter((v) => v.parentId !== null);
-    console.log('************************************getCommenta', comment);
     return commentWithParentId;
   }
 
@@ -131,7 +130,6 @@ export class CommentController {
   ): Promise<any> {
     console.log('************************************', token, param);
     const comment = await this.commentService.getComment(token, param);
-    console.log('************************************getComment', comment);
     const commentWithoutParentId = comment.filter((v) => v.parentId === null);
     return commentWithoutParentId;
   }
@@ -155,7 +153,7 @@ export class CommentController {
   @ApiBearerAuth()
   @Post(':param')
   async addComment(
-    @Body() { content, select }: addCommentReqDto,
+    @Body() { content, select, date_hour, date_minute }: addCommentReqDto,
     @Headers('authorization') token: string,
     @Param() { param }: addCommentReqDto,
   ): Promise<addCommentResDto> {
@@ -164,6 +162,8 @@ export class CommentController {
       token,
       param,
       select,
+      date_hour,
+      date_minute,
     );
     return {
       profile: comment.user.profile,

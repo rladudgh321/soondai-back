@@ -675,6 +675,10 @@ export class CommentService {
       where: { id: commentId },
     });
 
+    if (user.role === Role.Admin) {
+      return this.removeCommentByAdmin(postId, commentId, comment.id);
+    }
+
     //댓글쓴자 === 로그인사용자가 아니라면...
     if (comment.userId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
@@ -697,6 +701,23 @@ export class CommentService {
     return {
       postId: postId,
       commentId: comment.id,
+    };
+  }
+
+  async removeCommentByAdmin(postId: string, commentId: string, id: string) {
+    const deleteManys = this.prismaService.comment.deleteMany({
+      where: { parentId: commentId },
+    });
+
+    const deleteOne = this.prismaService.comment.delete({
+      where: { id },
+    });
+
+    await Promise.all([deleteManys, deleteOne]);
+
+    return {
+      postId: postId,
+      commentId,
     };
   }
 

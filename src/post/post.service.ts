@@ -166,15 +166,35 @@ export class PostService {
     if (post.authorId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
 
+    await this.prismaService.commentOnUser.deleteMany({
+      where: { postId: id },
+    });
+
+    await this.prismaService.comment.deleteMany({
+      where: { postId: id },
+    });
+
     const removePost = await this.prismaService.post.delete({ where: { id } });
+
     return {
       id: removePost.id,
     };
   }
 
   async removePostByAdmin(id: string) {
+    await this.prismaService.commentOnUser.deleteMany({
+      where: { postId: id },
+    });
+
+    await this.prismaService.comment.deleteMany({
+      where: { postId: id },
+    });
+
     const removePost = await this.prismaService.post.delete({ where: { id } });
-    return removePost;
+
+    return {
+      id: removePost.id,
+    };
   }
 
   async updatePost(

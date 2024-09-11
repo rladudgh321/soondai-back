@@ -250,20 +250,30 @@ export class CommentService {
     }
 
     // 댓글의 기존 좋아요 확인
-    const existingLike = await this.prismaService.commentOnUser.findUnique({
+    // const existingLike = await this.prismaService.commentOnUser.findUnique({
+    //   where: {
+    //     userId_likeId: {
+    //       userId: user.id,
+    //       likeId: commentId,
+    //     },
+    //   },
+    // });
+
+    // if (!existingLike) {
+    //   throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
+    // }
+
+    //로그인 유저 아이디 한정하여 삭제.. 다른 유저는 삭제 안됨
+    const likeComment = await this.prismaService.commentOnUser.findMany({
       where: {
-        userId_likeId: {
-          userId: user.id,
-          likeId: commentId,
-        },
+        postId: param,
       },
     });
 
-    if (!existingLike) {
-      throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
+    if (likeComment.length === 0) {
+      return false;
     }
 
-    //로그인 유저 아이디 한정하여 삭제.. 다른 유저는 삭제 안됨
     const deleteLikeComment = await this.prismaService.commentOnUser.delete({
       where: {
         userId_likeId: {

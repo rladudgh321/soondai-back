@@ -100,6 +100,27 @@ export class CommentController {
     return comment;
   }
 
+  @ApiBearerAuth()
+  @Delete('/deleteOne/:postId/:commentId')
+  async removeComment(
+    @Param() { postId, commentId }: removeCommentReqDto,
+    @Headers('authorization') token: string,
+  ): Promise<removeCommentResDto> {
+    console.log('removeComment', token);
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
+
+    const comment = await this.commentService.removeComment(
+      postId,
+      commentId,
+      token,
+    );
+    return { postId: comment.postId, commentId: comment.commentId };
+  }
+
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
   @Public()
@@ -234,26 +255,5 @@ export class CommentController {
     // count obejct { count : 3}
     console.log('removeComment return', comment);
     return { count: comment.count };
-  }
-
-  @ApiBearerAuth()
-  @Delete(':postId/:commentId')
-  async removeComment(
-    @Param() { postId, commentId }: removeCommentReqDto,
-    @Headers('authorization') token: string,
-  ): Promise<removeCommentResDto> {
-    console.log('removeComment', token);
-    const post = await this.prismaService.post.findUnique({
-      where: { id: postId },
-    });
-
-    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-
-    const comment = await this.commentService.removeComment(
-      postId,
-      commentId,
-      token,
-    );
-    return { postId: comment.postId, commentId: comment.commentId };
   }
 }

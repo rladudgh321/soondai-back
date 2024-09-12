@@ -71,3 +71,8 @@ export class getLikeCommentReqDto {
   @ApiProperty({ required: true })
   commentId: string;
 }
+
+export class ifDeletePost_deleteManyLikeReqDto {
+  @ApiProperty({ required: true })
+  param: string;
+}

@@ -274,6 +274,16 @@ export class CommentService {
       return false;
     }
 
+    if (user.role === Role.Admin) {
+      const deleteLikeComment =
+        await this.prismaService.commentOnUser.deleteMany({
+          where: {
+            likeId: commentId,
+          },
+        });
+      return deleteLikeComment;
+    }
+
     const deleteLikeComment = await this.prismaService.commentOnUser.delete({
       where: {
         userId_likeId: {
@@ -302,11 +312,8 @@ export class CommentService {
     return deleteLikeComment;
   }
 
-  async ifDeletePost_deleteManyLike(
-    token: string,
-    param: string,
-    commentId: string,
-  ) {
+  async ifDeletePost_deleteManyLike(token: string, param: string) {
+    console.log('mutationIfDeletePost_deleteManyLike');
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
     });
@@ -323,18 +330,22 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
-    // 댓글의 기존 좋아요 확인
-    const existingLike = await this.prismaService.commentOnUser.findUnique({
-      where: {
-        userId_likeId: {
-          userId: user.id,
-          likeId: commentId,
-        },
-      },
-    });
+    //로그인유저가 Admin일 경우
+    if (user.role === Role.Admin) {
+      const ifDeletePost_deleteManyLike =
+        await this.prismaService.commentOnUser.deleteMany({
+          where: {
+            postId: param,
+          },
+        });
 
-    if (!existingLike) {
-      throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
+      return ifDeletePost_deleteManyLike;
+    }
+
+    //게시글 글쓴이와 로그인사용자가 동일인물이 아닐시 에러
+
+    if (user.id !== post.authorId) {
+      throw new UnauthorizedException('허용되지 않은 방식입니다');
     }
 
     const ifDeletePost_deleteManyLike =
@@ -686,7 +697,7 @@ export class CommentService {
     });
 
     if (user.role === Role.Admin) {
-      return this.removeCommentByAdmin(postId, commentId, comment.id);
+      return this.removeCommentByAdmin(postId, commentId);
     }
 
     //댓글쓴자 === 로그인사용자가 아니라면...
@@ -714,13 +725,13 @@ export class CommentService {
     };
   }
 
-  async removeCommentByAdmin(postId: string, commentId: string, id: string) {
+  async removeCommentByAdmin(postId: string, commentId: string) {
     const deleteManys = this.prismaService.comment.deleteMany({
       where: { parentId: commentId },
     });
 
     const deleteOne = this.prismaService.comment.delete({
-      where: { id },
+      where: { id: commentId },
     });
 
     await Promise.all([deleteManys, deleteOne]);
@@ -752,6 +763,14 @@ export class CommentService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
+
+    if (user.role === Role.Admin) {
+      const comment = await this.prismaService.comment.deleteMany({
+        where: { postId: post.id },
+      });
+      console.log('back server comment', comment);
+      return comment;
+    }
 
     //게시글쓴이 === 로그인사용자가 아니라면...
     if (post.authorId !== user.id)

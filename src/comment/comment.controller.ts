@@ -19,6 +19,7 @@ import {
   addLikeCommentReqDto,
   getCommentReqDto,
   getLikeCommentReqDto,
+  ifDeletePost_deleteManyLikeReqDto,
   removeCommentReqDto,
 } from './dto/req.dto';
 import {
@@ -29,6 +30,8 @@ import {
   removeCommentResDto,
   removeCommentsResDto,
 } from './dto/res.dto';
+import { Role } from 'src/user/enum/role.enum';
+import { Roles } from 'src/common/decorator/roles.decorator';
 
 @ApiTags('comment')
 @ApiExtraModels(addCommentResDto, getCommentResDto)
@@ -71,16 +74,16 @@ export class CommentController {
 
   // @ApiPostResponse()
   @ApiBearerAuth()
-  @Delete('/post/like/:param/:commentId')
+  @Delete('/post/like/:param')
   async ifDeletePost_deleteManyLike(
     @Headers('authorization') token: string,
-    @Param() { param, commentId }: addLikeCommentReqDto,
+    @Param() { param }: ifDeletePost_deleteManyLikeReqDto,
   ): Promise<any> {
     const comment = await this.commentService.ifDeletePost_deleteManyLike(
       token,
       param,
-      commentId,
     );
+    console.log('mutationIfDeletePost_deleteManyLike comment', comment.count);
     return comment;
   }
 

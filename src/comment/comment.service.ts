@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -274,15 +275,15 @@ export class CommentService {
       return false;
     }
 
-    if (user.role === Role.Admin) {
-      const deleteLikeComment =
-        await this.prismaService.commentOnUser.deleteMany({
-          where: {
-            likeId: commentId,
-          },
-        });
-      return deleteLikeComment;
-    }
+    // if (user.role === Role.Admin) {
+    //   const deleteLikeComment =
+    //     await this.prismaService.commentOnUser.deleteMany({
+    //       where: {
+    //         likeId: commentId,
+    //       },
+    //     });
+    //   return deleteLikeComment;
+    // }
 
     const deleteLikeComment = await this.prismaService.commentOnUser.delete({
       where: {
@@ -303,11 +304,11 @@ export class CommentService {
 
     // const commentIds = comments.map((v) => v.id);
 
-    await this.prismaService.commentOnUser.deleteMany({
-      where: {
-        likeId: commentId,
-      },
-    });
+    // await this.prismaService.commentOnUser.deleteMany({
+    //   where: {
+    //     likeId: commentId,
+    //   },
+    // });
 
     return deleteLikeComment;
   }
@@ -379,25 +380,62 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
+    const comment = await this.prismaService.comment.findUnique({
+      where: {
+        id: commentId,
+      },
+    });
+
+    // admin 시 허용
+    if (Role.Admin === user.role) {
+      return this.deleteCommentsAll(commentId);
+    }
+
+    //comment parentId !== loginUser
+    if (comment.userId !== user.id) {
+      new UnauthorizedException('허용되지 않은 방법입니다');
+    }
+
+    return this.deleteCommentsAll(commentId);
+  }
+
+  async deleteCommentsAll(commentId: string) {
     const comments = await this.prismaService.comment.findMany({
       where: { parentId: commentId },
     });
 
     const commentIds = comments.map((v) => v.id);
 
+    const deleteParentLikeComment = this.prismaService.commentOnUser.deleteMany(
+      {
+        where: {
+          likeId: commentId,
+        },
+      },
+    );
+
+    // const deleteParentLikeComment = this.prismaService.commentOnUser.delete({
+    //   where: {
+    //     userId_likeId: {
+    //       likeId: commentId,
+    //       userId,
+    //     },
+    //   },
+    // });
+
     //대댓글 좋아요 전부 삭제
     if (commentIds.length > 0) {
-      const deleteLikeComment =
-        await this.prismaService.commentOnUser.deleteMany({
-          where: {
-            likeId: {
-              in: commentIds,
-            },
+      const deleteLikeComment = this.prismaService.commentOnUser.deleteMany({
+        where: {
+          likeId: {
+            in: commentIds,
           },
-        });
+        },
+      });
+      await Promise.all([deleteParentLikeComment, deleteLikeComment]);
       return deleteLikeComment;
     } else {
-      return null;
+      return await deleteParentLikeComment;
     }
   }
 
@@ -723,6 +761,53 @@ export class CommentService {
       postId: postId,
       commentId: comment.id,
     };
+  }
+
+  async removeDaetguelLikes(commentId: string, token: string) {
+    //토큰을 이용한 로그인사용자
+    console.log('removeComment token key', token);
+
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = await this.userService.findOne(decoded.sub);
+
+    const comment = await this.prismaService.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('게시글을 찾을 수 없습니다');
+    }
+
+    if (user.role === Role.Admin) {
+      const removeDeatguelLikes =
+        await this.prismaService.commentOnUser.deleteMany({
+          where: {
+            likeId: commentId,
+          },
+        });
+      return removeDeatguelLikes;
+    }
+
+    //댓글쓴자 === 로그인사용자가 아니라면...
+    if (comment.userId !== user.id)
+      throw new UnauthorizedException('허용되지 않은 방법입니다');
+
+    const removeDeatguelLikes =
+      await this.prismaService.commentOnUser.deleteMany({
+        where: {
+          likeId: commentId,
+        },
+      });
+
+    // //다른 유저들의 좋아요 삭제
+    // await this.prismaService.commentOnUser.deleteMany({
+    //   where: { likeId: commentId },
+    // });
+
+    return removeDeatguelLikes;
   }
 
   async removeCommentByAdmin(postId: string, commentId: string) {

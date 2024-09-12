@@ -124,6 +124,26 @@ export class CommentController {
     return { postId: comment.postId, commentId: comment.commentId };
   }
 
+  @ApiBearerAuth()
+  @Delete('/daetguel/likes/:postId/:commentId')
+  async removeDaetguelLikes(
+    @Param() { postId, commentId }: removeCommentReqDto,
+    @Headers('authorization') token: string,
+  ): Promise<any> {
+    console.log('removeComment', token);
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
+
+    const comment = await this.commentService.removeDaetguelLikes(
+      commentId,
+      token,
+    );
+    return comment;
+  }
+
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
   @Public()

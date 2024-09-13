@@ -135,6 +135,26 @@ export class PostService {
     return posts;
   }
 
+  async navCount() {
+    const categoryCounts = this.prismaService.post.groupBy({
+      by: ['categoryId'],
+      _count: {
+        id: true,
+      },
+    });
+
+    const postCount = this.prismaService.post.count();
+    const [categoryCount, total] = await Promise.all([
+      categoryCounts,
+      postCount,
+    ]);
+
+    return {
+      categoryCount,
+      total,
+    };
+  }
+
   async getPost(id: string, token: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id },

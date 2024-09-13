@@ -54,6 +54,13 @@ export class PostController {
   }
 
   @Public()
+  @Get('/navCount')
+  async navCount(): Promise<any> {
+    return this.postService.navCount();
+  }
+
+
+  @Public()
   @Get('/pagination')
   async pagenationFindAll(
     @Query() { page = 1, limit = 10, category }: pagenationReqDto,

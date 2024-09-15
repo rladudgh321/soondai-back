@@ -530,24 +530,6 @@ export class CommentService {
       },
     });
 
-    console.log('!!!!!!!!!!!');
-
-    // commentOnUser의 userId 값을 추가해서 리턴해주기
-
-    // comment.map(
-    //   async (v) =>
-    //     await this.prismaService.commentOnUser.findUnique({
-    //       where: {
-    //         userId_likeId: {
-    //           userId: user?.id,
-    //           likeId: v.id,
-    //         },
-    //       },
-    //     }),
-    // );
-
-    // return할 곳에 likers: [{id:1}, {id:2}] 형식으로 리턴을해라
-
     const mapComment = await Promise.all(
       comment.map(
         async ({
@@ -590,49 +572,183 @@ export class CommentService {
       ),
     );
 
-    // const hi = await Promise.all(
-    //   mapComment.map(async (v) => {
-    //     const userId = await this.prismaService.commentOnUser.findUnique({
-    //       where: {
-    //         userId_likeId: {
-    //           userId: user.id,
-    //           likeId: v.id,
-    //         },
+    return mapComment;
+  }
+
+  async getCommentPagination(
+    token: string | null,
+    param: string,
+    page?: number,
+    limit?: number,
+  ) {
+    console.log('****back token, param', token, param);
+    let user = null;
+    let decoded = null;
+
+    if (token !== 'Bearer null') {
+      console.log('토큰 있을 경우', token);
+      decoded = this.jwtService.verify(token?.slice(7), {
+        secret: this.configService.get('jwt').secret,
+      });
+      user = await this.prismaService.user.findUnique({
+        where: { id: decoded?.sub },
+      });
+      console.log('user null', user);
+    } else {
+      console.log('토큰 없을 경우');
+      console.log('token', token);
+      user = null;
+    }
+
+    const post = await this.prismaService.post.findUnique({
+      where: {
+        id: param,
+      },
+    });
+
+    if (!post) {
+      throw new ConflictException('존재하지 않은 게시글입니다');
+    }
+
+    const skip = (page - 1) * limit;
+
+    return this.getCommentsByPostPagination(skip, limit, param, user.id);
+
+    // const comment = await this.prismaService.comment.findMany({
+    //   where: { postId: param },
+    //   include: {
+    //     user: {
+    //       select: {
+    //         profile: true,
+    //         name: true,
+    //         id: true,
     //       },
-    //     });
-    //     return userId;
-    //   }),
+    //     },
+    //     likeUsers: true,
+    //   },
+    // });
+
+    // const mapComment = await Promise.all(
+    //   comment.map(
+    //     async ({
+    //       id,
+    //       user: { profile, name, id: loginUserId },
+    //       createdAt,
+    //       content,
+    //       parentId,
+    //     }) => {
+    //       const userId = await this.prismaService.commentOnUser.findUnique({
+    //         where: {
+    //           userId_likeId: {
+    //             userId: user?.id,
+    //             likeId: id,
+    //           },
+    //         },
+    //       });
+    //       console.log('Promise userId', userId);
+    //       return {
+    //         id,
+    //         profile,
+    //         name,
+    //         createdAt,
+    //         content,
+    //         parentId,
+    //         authorId: loginUserId,
+    //         commentCount: await this.prismaService.comment.count({
+    //           where: {
+    //             parentId: id,
+    //           },
+    //         }),
+    //         commentLikeCount: await this.prismaService.commentOnUser.count({
+    //           where: {
+    //             likeId: id,
+    //           },
+    //         }),
+    //         userId,
+    //       };
+    //     },
+    //   ),
     // );
 
-    // console.log('hi', hi);
+    // return mapComment;
+  }
 
-    //   const posts = await prisma.profile
-    // .findUnique({
-    //   where: { id: 1 },
-    // })
-    // .user()
-    // .posts()
+  async getCommentsByPostPagination(
+    skip: number,
+    limit: number,
+    param: string,
+    useruser: string,
+  ) {
+    try {
+      const commentWithoutParentId = await this.prismaService.comment.findMany({
+        where: { parentId: null, postId: param },
+        skip,
+        take: Number(limit),
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          user: true,
+        },
+      });
 
-    // const userIdInCommentOnUserModel = await this.prismaService.comment
-    //   .findMany({
-    //     where: {
-    //       postId: param,
-    //     },
-    //   })
+      const mapComment = Promise.all(
+        commentWithoutParentId.map(
+          async ({
+            id,
+            user: { profile, name, id: loginUserId },
+            createdAt,
+            content,
+            parentId,
+          }) => {
+            const userId = await this.prismaService.commentOnUser.findUnique({
+              where: {
+                userId_likeId: {
+                  userId: useruser,
+                  likeId: id,
+                },
+              },
+            });
+            return {
+              id,
+              profile,
+              name,
+              createdAt,
+              content,
+              parentId,
+              authorId: loginUserId,
+              commentCount: await this.prismaService.comment.count({
+                where: {
+                  parentId: id,
+                },
+              }),
+              commentLikeCount: await this.prismaService.commentOnUser.count({
+                where: {
+                  likeId: id,
+                },
+              }),
+              userId,
+            };
+          },
+        ),
+      );
 
-    // .likeUsers();
+      const totalCategory = this.prismaService.comment.count({
+        where: { parentId: null },
+      });
 
-    // const userIdInCommentOnUserModel =
-    //   await this.prismaService.commentOnUser.findUnique({
-    //     where: {
-    //       userId_likeId: {
-    //         userId: user.id,
-    //         likeId: 'dd',
-    //       },
-    //     },
-    //   });
+      const [items, total] = await Promise.all([mapComment, totalCategory]);
 
-    return mapComment;
+      console.log('itemsitems', items);
+
+      return {
+        items,
+        total,
+      };
+    } catch (err) {
+      console.error(err);
+      throw Error(err);
+    }
   }
 
   async getCommenta(token: string, param: string, parentId: string) {

@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -17,6 +18,7 @@ import { CommentService } from './comment.service';
 import {
   addCommentReqDto,
   addLikeCommentReqDto,
+  GetCommentPaginationReqDto,
   getCommentReqDto,
   getLikeCommentReqDto,
   ifDeletePost_deleteManyLikeReqDto,
@@ -161,6 +163,25 @@ export class CommentController {
     );
     const commentWithParentId = comment.filter((v) => v.parentId !== null);
     return commentWithParentId;
+  }
+
+  @ApiPostResponse(getCommentResDto)
+  @ApiBearerAuth()
+  @Get('/pagination/:param') // param은 postId
+  async getCommentPagination(
+    @Headers('authorization') token: string | null,
+    @Param('param') param: string,
+    @Query() { page = 1, limit = 10 }: GetCommentPaginationReqDto,
+    // @Param() { param }: getCommentReqDto,
+  ): Promise<any> {
+    console.log('************************************', token, param);
+    const comment = await this.commentService.getCommentPagination(
+      token,
+      param,
+      page,
+      limit,
+    );
+    return comment;
   }
 
   @ApiPostResponse(getCommentResDto)

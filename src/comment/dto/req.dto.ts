@@ -34,6 +34,18 @@ export class getCommentReqDto {
   parentId: string;
 }
 
+export class GetCommentPaginationReqDto {
+  @ApiPropertyOptional({
+    title: '페이지',
+  })
+  page?: number = 1;
+
+  @ApiPropertyOptional({
+    title: '페이지당 갯수',
+  })
+  limit?: number = 10;
+}
+
 export class removeCommentReqDto {
   @ApiProperty({
     required: true,

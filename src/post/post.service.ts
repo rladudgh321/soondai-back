@@ -356,8 +356,6 @@ export class PostService {
   async pagenationFindAll(page: number, limit: number, category?: string) {
     const skip = (page - 1) * limit;
 
-    // const posts = user?.posts || [];
-
     return this.getPostsByCategoryOrAll(skip, limit, category);
   }
 

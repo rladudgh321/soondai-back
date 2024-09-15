@@ -30,7 +30,7 @@ import {
   UpdatePostReqDto,
   addpostReqDto,
   getPostReqDto,
-  pagenationReqDto
+  pagenationReqDto,
 } from './dto/req.dto';
 import {
   GetPostReqDto,
@@ -59,16 +59,14 @@ export class PostController {
     return this.postService.navCount();
   }
 
-
   @Public()
   @ApiBearerAuth()
   @Get('/pagination')
   async pagenationFindAll(
     @Query() { page = 1, limit = 10, category }: pagenationReqDto,
-    @Headers('authorization') token: string,
   ): Promise<any> {
-    console.log('page, limit, token, category', page, limit, token, category);
-    return this.postService.pagenationFindAll(page, limit, token, category);
+    console.log('page, limit, token, category', page, limit, category);
+    return this.postService.pagenationFindAll(page, limit, category);
   }
 
   @Public()
@@ -114,7 +112,6 @@ export class PostController {
       title,
       content,
       token,
-      published,
       highlight,
       image,
       category,
@@ -128,7 +125,6 @@ export class PostController {
       title,
       content,
       token,
-      published,
       highlight,
       image,
       category,
@@ -169,7 +165,6 @@ export class PostController {
     {
       title,
       content,
-      published,
       highlight,
       image,
       category,
@@ -183,7 +178,6 @@ export class PostController {
       title,
       content,
       token,
-      published,
       highlight,
       image,
       category,
@@ -202,22 +196,13 @@ export class PostController {
     @Param() { params }: UpdatePostReqDto,
     @Headers('authorization') token: string,
     @Body()
-    {
-      title,
-      content,
-      published,
-      highlight,
-      image,
-      category,
-      select,
-    }: UpdatePostReqDto,
+    { title, content, highlight, image, category, select }: UpdatePostReqDto,
   ): Promise<any> {
     const post = await this.postService.updatePost(
       params,
       title,
       content,
       token,
-      published,
       highlight,
       image,
       category,

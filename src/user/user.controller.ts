@@ -1,4 +1,12 @@
-import { Controller, Get, Headers, Logger, Param, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Headers,
+  Logger,
+  Param,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import {
@@ -41,7 +49,10 @@ export class UserController {
   @Get('/findOne')
   async getUserId(
     @Headers('authorization') token: string,
-  ): Promise<GetUserIdResDto> {
+  ): Promise<GetUserIdResDto | null> {
+    if (!token) {
+      return null;
+    }
     const user = await this.userService.getUserId(token);
     return { id: user.id, role: user.role };
   }

@@ -27,7 +27,6 @@ export class PostService {
     title: string,
     content: string,
     token: string,
-    published: boolean,
     highlight: boolean,
     image: string,
     category: string,
@@ -80,7 +79,6 @@ export class PostService {
       data: {
         title,
         content,
-        published,
         highlight,
         image,
         category: {
@@ -222,7 +220,6 @@ export class PostService {
     title: string,
     content: string,
     token: string,
-    published: boolean,
     highlight: boolean,
     image: string,
     category: string,
@@ -287,7 +284,6 @@ export class PostService {
       data: {
         title,
         content,
-        published,
         highlight,
         image,
         category: {
@@ -357,262 +353,26 @@ export class PostService {
   //user.id가 게시글 사용자와 같다면 그대로 리턴
   //그외는 return null;
 
-  async pagenationFindAll(
-    page: number,
-    limit: number,
-    token: string,
-    category?: string,
-  ) {
-    let user = null;
-    if (token.slice(7) !== 'null') {
-      try {
-        console.log('token 있습니다');
-        // const cleanedToken = token.startsWith('Bearer ')
-        //   ? token.slice(7)
-        //   : token;
-
-        // 비밀키와 함께 비동기적으로 JWT를 검증합니다
-        const decoded = this.jwtService.verify(token.slice(7), {
-          secret: this.configService.get('jwt').secret,
-        });
-        user = await this.prismaService.user.findUnique({
-          where: { id: decoded.sub },
-          include: {
-            posts: true,
-          },
-        });
-      } catch (err) {
-        console.log('pagenationFindAll err', err);
-        throw new Error(err);
-      }
-    } else {
-      console.log('token 없습니다');
-      user = null;
-    }
-
+  async pagenationFindAll(page: number, limit: number, category?: string) {
     const skip = (page - 1) * limit;
-
-    const isUser = user?.id;
 
     // const posts = user?.posts || [];
 
-    const posts = await this.prismaService.post.findMany({
-      where: {
-        authorId: isUser,
-      },
-    });
-
-    if (isUser) {
-      console.log('login 함');
-      if (user.role === Role.Admin) {
-        console.log('admin User');
-        if (category) {
-          const findCategoryAll = this.prismaService.post.findMany({
-            where: {
-              categoryId: category,
-            },
-            skip,
-            take: limit,
-            orderBy: {
-              createdAt: 'desc',
-            },
-          });
-          const totalCategory = this.prismaService.post.count({
-            where: {
-              categoryId: category,
-            },
-          });
-
-          const [items, total] = await Promise.all([
-            findCategoryAll,
-            totalCategory,
-          ]);
-
-          return {
-            items,
-            total,
-          };
-        } else {
-          // 전체 보여주기
-          const posts = this.prismaService.post.findMany({
-            skip,
-            take: limit,
-            orderBy: {
-              createdAt: 'desc',
-            },
-          });
-
-          const [items, total] = await Promise.all([
-            posts,
-            this.prismaService.post.count(),
-          ]);
-          return {
-            items,
-            total,
-          };
-        }
-      } else {
-        try {
-          const queries = posts.map(async (v) => {
-            if (v.authorId === isUser) {
-              // console.log(
-              //   '로그인 유저와 글쓴이 유저가 동일인물',
-              //   await this.getPostsByCategoryOrAll(
-              //     category,
-              //     skip,
-              //     limit,
-              //     isUser,
-              //     true,
-              //   ),
-              // );
-              console.log('isUser', isUser, 'v.author', v.authorId);
-              console.log('로그인로그인로그인', category);
-              return this.getPostsByCategoryOrAll(
-                category,
-                skip,
-                limit,
-                isUser,
-                true,
-              );
-            } else {
-              // console.log(
-              //   '로그인 유저와 게시글 유저가 동일인물이 아님',
-              //   await this.getPostsByCategoryOrAll(
-              //     category,
-              //     skip,
-              //     limit,
-              //     isUser,
-              //     false,
-              //   ),
-              // );
-
-              return this.getPostsByCategoryOrAll(
-                category,
-                skip,
-                limit,
-                isUser,
-                false,
-              );
-            }
-          });
-
-          const results = await Promise.all(queries);
-
-          console.log('results', results);
-
-          // 각 결과를 반환
-          return results[0];
-        } catch (err) {
-          console.error(err);
-          throw Error(err);
-        }
-      }
-    } else {
-      // 로그인 하지 않음
-      // 카테고리 전체 보여주기
-      console.log('아이디 없는 사람');
-      if (category) {
-        const findCategoryAll = this.prismaService.post.findMany({
-          where: {
-            categoryId: category,
-            published: true,
-          },
-          skip,
-          take: limit,
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
-        const totalCategory = this.prismaService.post.count({
-          where: {
-            categoryId: category,
-            published: true,
-          },
-        });
-
-        const [items, total] = await Promise.all([
-          findCategoryAll,
-          totalCategory,
-        ]);
-
-        return {
-          items,
-          total,
-        };
-      } else {
-        // 전체 보여주기
-        const posts = this.prismaService.post.findMany({
-          where: {
-            published: true,
-          },
-          skip,
-          take: limit,
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
-
-        const [items, total] = await Promise.all([
-          posts,
-          this.prismaService.post.count({
-            where: {
-              published: true,
-            },
-          }),
-        ]);
-        return {
-          items,
-          total,
-        };
-      }
-    }
+    return this.getPostsByCategoryOrAll(skip, limit, category);
   }
 
   async getPostsByCategoryOrAll(
-    category: string,
     skip: number,
     limit: number,
-    loginUser: string,
-    isUser: boolean,
+    category?: string,
   ) {
     try {
-      // 로그인한 사용자가 게시글 작성자인지 확인하기 위한 쿼리
-      const userPosts = await this.prismaService.post.findMany({
-        where: {
-          authorId: loginUser,
-        },
-      });
-
-      // 로그인한 사용자가 작성한 게시글이 있을 경우
-      const isAuthor = userPosts.length > 0;
-
       const whereClause = {
         ...(category ? { categoryId: category } : {}),
-        ...(isAuthor ? {} : { published: true }), // 비공개 게시글 제외
       };
 
       const findCategoryAll = this.prismaService.post.findMany({
-        where: {
-          ...whereClause,
-          // 로그인한 사용자가 아닌 경우, 비공개 게시글 제외
-          ...(isUser
-            ? {}
-            : {
-                AND: [
-                  { published: true }, // 공개된 게시글만
-                  { authorId: { not: loginUser } }, // 다른 사용자의 게시글만
-                ],
-              }),
-          // 로그인한 사용자가 작성자일 경우, 자신이 작성한 비공개 게시글도 포함
-          ...(isUser
-            ? {
-                OR: [
-                  { authorId: loginUser }, // 자신의 게시글
-                  { published: true }, // 또는 공개된 게시글
-                ],
-              }
-            : {}),
-        },
+        where: whereClause,
         skip,
         take: limit,
         orderBy: {

@@ -16,9 +16,6 @@ export class addpostReqDto {
   })
   token: string;
 
-  @ApiProperty({ title: '글 공개 여부', required: true })
-  published: boolean;
-
   @ApiProperty({ title: '하이라이트 여부', required: true })
   highlight: boolean;
 
@@ -61,9 +58,6 @@ export class UpdatePostReqDto {
     example: 'update content',
   })
   content: string;
-
-  @ApiProperty({ required: true, title: '공개여부' })
-  published: boolean;
 
   @ApiProperty({ required: true, title: '하이라이트 여부' })
   highlight: boolean;

@@ -48,7 +48,7 @@ export class removeCommentsResDto {
 
 export class addLikeCommentResDto {
   @ApiProperty({ required: true })
-  heartOrNot: string;
+  userId: string;
 
   @ApiProperty({ required: true })
   count: number;

@@ -218,7 +218,7 @@ export class CommentService {
       where: { likeId: commentId },
     });
 
-    const HeartOrNot = await this.prismaService.commentOnUser.findUnique({
+    const userId = await this.prismaService.commentOnUser.findUnique({
       where: {
         userId_likeId: {
           userId: user.id,
@@ -227,10 +227,9 @@ export class CommentService {
       },
     });
 
-    console.log('heartornot', HeartOrNot.userId);
     console.log('comment like count', likeCount);
 
-    return { heartOrNot: HeartOrNot.userId, count: likeCount, userId: user.id };
+    return { userId: userId.userId, count: likeCount };
   }
 
   async removeLikeComment(token: string, param: string, commentId: string) {
@@ -612,72 +611,13 @@ export class CommentService {
 
     const skip = (page - 1) * limit;
 
-    return this.getCommentsByPostPagination(skip, limit, param, user.id);
-
-    // const comment = await this.prismaService.comment.findMany({
-    //   where: { postId: param },
-    //   include: {
-    //     user: {
-    //       select: {
-    //         profile: true,
-    //         name: true,
-    //         id: true,
-    //       },
-    //     },
-    //     likeUsers: true,
-    //   },
-    // });
-
-    // const mapComment = await Promise.all(
-    //   comment.map(
-    //     async ({
-    //       id,
-    //       user: { profile, name, id: loginUserId },
-    //       createdAt,
-    //       content,
-    //       parentId,
-    //     }) => {
-    //       const userId = await this.prismaService.commentOnUser.findUnique({
-    //         where: {
-    //           userId_likeId: {
-    //             userId: user?.id,
-    //             likeId: id,
-    //           },
-    //         },
-    //       });
-    //       console.log('Promise userId', userId);
-    //       return {
-    //         id,
-    //         profile,
-    //         name,
-    //         createdAt,
-    //         content,
-    //         parentId,
-    //         authorId: loginUserId,
-    //         commentCount: await this.prismaService.comment.count({
-    //           where: {
-    //             parentId: id,
-    //           },
-    //         }),
-    //         commentLikeCount: await this.prismaService.commentOnUser.count({
-    //           where: {
-    //             likeId: id,
-    //           },
-    //         }),
-    //         userId,
-    //       };
-    //     },
-    //   ),
-    // );
-
-    // return mapComment;
+    return this.getCommentsByPostPagination(skip, limit, param);
   }
 
   async getCommentsByPostPagination(
     skip: number,
     limit: number,
     param: string,
-    useruser: string,
   ) {
     try {
       const commentWithoutParentId = await this.prismaService.comment.findMany({
@@ -704,7 +644,7 @@ export class CommentService {
             const userId = await this.prismaService.commentOnUser.findUnique({
               where: {
                 userId_likeId: {
-                  userId: useruser,
+                  userId: loginUserId,
                   likeId: id,
                 },
               },

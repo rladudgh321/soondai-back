@@ -50,7 +50,7 @@ export class CommentController {
   async addLikeComment(
     @Headers('authorization') token: string,
     @Param() { param, commentId }: addLikeCommentReqDto,
-  ): Promise<addLikeCommentResDto> {
+  ): Promise<any> {
     const comment = await this.commentService.addLikeComment(
       token,
       param,
@@ -165,8 +165,10 @@ export class CommentController {
     return commentWithParentId;
   }
 
+
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
+  @Public()
   @Get('/pagination/:param') // param은 postId
   async getCommentPagination(
     @Headers('authorization') token: string | null,

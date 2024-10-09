@@ -674,7 +674,7 @@ export class CommentService {
       );
 
       const totalCategory = this.prismaService.comment.count({
-        where: { parentId: null },
+        where: { parentId: null, postId: param },
       });
 
       const [items, total] = await Promise.all([mapComment, totalCategory]);

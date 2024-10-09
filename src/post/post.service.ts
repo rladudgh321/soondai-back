@@ -228,8 +228,9 @@ export class PostService {
     date_minute?: number,
   ) {
     console.log('select****', select);
+    console.log('token****', token.split(' ')[1]);
 
-    const decoded = this.jwtService.verify(token.slice(7), {
+    const decoded = this.jwtService.verify(token.split(' ')[1], {
       secret: this.configService.get('jwt').secret,
     });
 
@@ -308,14 +309,16 @@ export class PostService {
     content: string,
     token: string,
   ) {
-    const decoded = this.jwtService.decode(token);
+    const decoded = this.jwtService.verify(token.split(' ')[1], {
+      secret: this.configService.get('jwt').secret,
+    });
 
     const [post, user] = await Promise.all([
       this.prismaService.post.findUnique({
         where: { id },
       }),
       this.prismaService.user.findUnique({
-        where: { id: decoded.sub },
+        where: { id: decoded?.sub },
       }),
     ]);
 

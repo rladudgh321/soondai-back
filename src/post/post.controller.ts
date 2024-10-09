@@ -185,6 +185,7 @@ export class PostController {
       date_hour,
       date_minute,
     );
+    console.log('update token', token)
     return post;
   }
 

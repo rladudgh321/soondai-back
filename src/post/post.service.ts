@@ -54,11 +54,13 @@ export class PostService {
       throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
     }
 
+    //시간 설정 createdAt
     let alterTime = null;
 
     const selectDate = dayjs(select).tz('Asia/Seoul');
 
     if (!!date_hour && !!date_minute) {
+      // 선택 시간과 선택 분이 설정되지 않았다면
       alterTime = selectDate
         .hour(date_hour)
         .minute(date_minute)
@@ -66,6 +68,7 @@ export class PostService {
         .toDate(); // Convert to local time
       console.log('alterTimealterTime', dayjs(alterTime).format());
     } else {
+      // selecte에는 날짜 선택된 시간,분이 있음
       alterTime = dayjs(this.createDateMaker(select)).toDate();
     }
     const date = dayjs(alterTime).format();
@@ -95,15 +98,18 @@ export class PostService {
     return post;
   }
 
+  // 선택된 날짜에 오늘 날짜의 시간 붙이기
   createDateMaker(select: Date) {
-    const currentTime = new Date();
-    const alterTime = new Date(select);
+    const currentTime = new Date(); //오늘 날짜
+    const alterTime = new Date(select); //선택된 날짜
 
+    // 오늘 날짜의 시분초
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     const seconds = currentTime.getSeconds();
     const milliseconds = currentTime.getMilliseconds();
 
+    // 선택된 날짜에 오늘날짜의 시분초 붙이기
     alterTime.setHours(hours);
     alterTime.setMinutes(minutes);
     alterTime.setSeconds(seconds);
@@ -241,13 +247,6 @@ export class PostService {
     });
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
 
-    if (user.role === Role.Admin) {
-      return this.updatePostByAdmin(params, title, content, token);
-    }
-
-    if (post.authorId !== user.id)
-      throw new UnauthorizedException('허용되지 않은 방법입니다');
-
     // Check if the category exists
     const existingCategory = await this.prismaService.category.findUnique({
       where: { id: category },
@@ -256,6 +255,23 @@ export class PostService {
     if (!existingCategory) {
       throw new NotFoundException('카테고리가 존재하지 않습니다');
     }
+
+    if (user.role === Role.Admin) {
+      return this.updatePostByAdmin(
+        params,
+        title,
+        content,
+        highlight,
+        image,
+        category,
+        select,
+        date_hour,
+        date_minute,
+      );
+    }
+
+    if (post.authorId !== user.id)
+      throw new UnauthorizedException('허용되지 않은 방법입니다');
 
     let alterTime = null;
 
@@ -269,7 +285,8 @@ export class PostService {
         .toDate(); // Convert to local time
       console.log('alterTimealterTime', dayjs(alterTime).format());
     } else {
-      alterTime = dayjs(post.createdAt).toDate();
+      // alterTime = dayjs(post.createdAt).toDate();
+      alterTime = dayjs(this.createDateMaker(select)).toDate();
     }
     const date = dayjs(alterTime).format();
     console.log('alterTime (Local Time)', dayjs(alterTime).format());
@@ -303,32 +320,38 @@ export class PostService {
     return updatePost;
   }
 
-  async updatePostByAdmin(
+  private async updatePostByAdmin(
     id: string,
     title: string,
     content: string,
-    token: string,
+    highlight: boolean,
+    image: string,
+    category: string,
+    select: Date,
+    date_hour?: number,
+    date_minute?: number,
   ) {
-    const decoded = this.jwtService.verify(token.split(' ')[1], {
-      secret: this.configService.get('jwt').secret,
-    });
+    let alterTime = null;
 
-    const [post, user] = await Promise.all([
-      this.prismaService.post.findUnique({
-        where: { id },
-      }),
-      this.prismaService.user.findUnique({
-        where: { id: decoded?.sub },
-      }),
-    ]);
+    const selectDate = dayjs(select).tz('Asia/Seoul');
 
-    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-    if (!user) throw new NotFoundException('허용되지 않은 사용자입니다');
-    // accessToken의 아이디가 User이면 접근 허용금지
-
-    const role = user.role;
-    if (role === Role.User)
-      throw new UnauthorizedException('허용되지 않은 접근입니다');
+    if (!!date_hour && !!date_minute) {
+      alterTime = selectDate
+        .hour(date_hour)
+        .minute(date_minute)
+        // .second(0) // Optional: set seconds to 0 if needed
+        .toDate(); // Convert to local time
+      console.log('alterTimealterTime', dayjs(alterTime).format());
+    } else {
+      // alterTime = dayjs(post.createdAt).toDate();
+      alterTime = dayjs(this.createDateMaker(select)).toDate();
+    }
+    const date = dayjs(alterTime).format();
+    console.log('alterTime (Local Time)', dayjs(alterTime).format());
+    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
+    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
+    console.log('alterTime', alterTime);
+    console.log('date', date);
 
     const updatePost = await this.prismaService.post.update({
       where: {
@@ -337,6 +360,16 @@ export class PostService {
       data: {
         title,
         content,
+        highlight,
+        image,
+        category: {
+          connect: {
+            id: category,
+          },
+        },
+        select,
+        createdAt: alterTime,
+        updatedAt: dayjs(Date.now()).toDate(),
       },
     });
 

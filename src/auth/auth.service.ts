@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -129,5 +129,4 @@ export class AuthService {
     await this.createRefreshtoken(user.id, refreshToken);
     return { id: user.id, accessToken, refreshToken };
   }
-
 }

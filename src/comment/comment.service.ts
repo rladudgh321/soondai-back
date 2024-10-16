@@ -35,7 +35,6 @@ export class CommentService {
     date_hour: number,
     date_minute: number,
   ) {
-    console.log('addComment content', content);
     if (content.length === 0) {
       throw new BadRequestException('필수값이 미입력 됨');
     }
@@ -66,17 +65,10 @@ export class CommentService {
         .minute(date_minute)
         // .second(0) // Optional: set seconds to 0 if needed
         .toDate(); // Convert to local time
-      console.log('alterTimealterTime', dayjs(alterTime).format());
     } else {
       alterTime = dayjs(this.postService.createDateMaker(select)).toDate();
     }
     const date = dayjs(alterTime).format();
-    console.log('alterTime (Local Time)', dayjs(alterTime).format());
-    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
-    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
-    console.log('alterTime', alterTime);
-    console.log('date', date);
-
     const comment = await this.prismaService.comment.create({
       data: {
         createdAt: alterTime,
@@ -110,7 +102,6 @@ export class CommentService {
     select: Date,
     parentId: string,
   ) {
-    console.log('addComment content', content);
     if (content.length === 0) {
       throw new BadRequestException('필수값이 미입력 됨');
     }
@@ -227,8 +218,6 @@ export class CommentService {
       },
     });
 
-    console.log('comment like count', likeCount);
-
     return { userId: userId.userId, count: likeCount };
   }
 
@@ -248,22 +237,6 @@ export class CommentService {
     if (!post) {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
-
-    // 댓글의 기존 좋아요 확인
-    // const existingLike = await this.prismaService.commentOnUser.findUnique({
-    //   where: {
-    //     userId_likeId: {
-    //       userId: user.id,
-    //       likeId: commentId,
-    //     },
-    //   },
-    // });
-
-    // if (!existingLike) {
-    //   throw new ConflictException('좋아요가 추가된 댓글이 아닙니다');
-    // }
-
-    //로그인 유저 아이디 한정하여 삭제.. 다른 유저는 삭제 안됨
     const likeComment = await this.prismaService.commentOnUser.findMany({
       where: {
         postId: param,
@@ -274,16 +247,6 @@ export class CommentService {
       return false;
     }
 
-    // if (user.role === Role.Admin) {
-    //   const deleteLikeComment =
-    //     await this.prismaService.commentOnUser.deleteMany({
-    //       where: {
-    //         likeId: commentId,
-    //       },
-    //     });
-    //   return deleteLikeComment;
-    // }
-
     const deleteLikeComment = await this.prismaService.commentOnUser.delete({
       where: {
         userId_likeId: {
@@ -293,27 +256,10 @@ export class CommentService {
       },
     });
 
-    // const comments = await this.prismaService.comment.findMany({
-    //   where: { parentId: commentId },
-    // });
-
-    // const comment = await this.prismaService.comment.findUnique({
-    //   where: { id: commentId },
-    // });
-
-    // const commentIds = comments.map((v) => v.id);
-
-    // await this.prismaService.commentOnUser.deleteMany({
-    //   where: {
-    //     likeId: commentId,
-    //   },
-    // });
-
     return deleteLikeComment;
   }
 
   async ifDeletePost_deleteManyLike(token: string, param: string) {
-    console.log('mutationIfDeletePost_deleteManyLike');
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
     });
@@ -413,15 +359,6 @@ export class CommentService {
       },
     );
 
-    // const deleteParentLikeComment = this.prismaService.commentOnUser.delete({
-    //   where: {
-    //     userId_likeId: {
-    //       likeId: commentId,
-    //       userId,
-    //     },
-    //   },
-    // });
-
     //대댓글 좋아요 전부 삭제
     if (commentIds.length > 0) {
       const deleteLikeComment = this.prismaService.commentOnUser.deleteMany({
@@ -455,17 +392,6 @@ export class CommentService {
       throw new ConflictException('존재하지 않은 게시글입니다');
     }
 
-    // const likeCount = await this.prismaService.commentOnUser.count({
-    //   where: { likeId: commentId },
-    // });
-
-    // 댓글의 좋아요수 ==> 댓글아이디, 댓글좋아요사용자아이디
-    // const likeCount = await this.prismaService.commentOnUser.count({
-    //   where: {
-    //     likeId: commentId,
-    //   }
-    // })
-
     const HeartOrNot = await this.prismaService.commentOnUser.findUnique({
       where: {
         userId_likeId: {
@@ -475,34 +401,24 @@ export class CommentService {
       },
     });
 
-    console.log('**heartornot**', HeartOrNot);
-    console.log('heartornot', HeartOrNot?.userId);
-    // console.log('comment like count', likeCount);
-
     return {
       userId: HeartOrNot?.userId,
       likeId: HeartOrNot.likeId,
-      // count: likeCount,
     };
   }
 
   async getComment(token: string | null, param: string) {
-    console.log('****back token, param', token, param);
     let user = null;
     let decoded = null;
 
     if (token !== 'Bearer null') {
-      console.log('토큰 있을 경우', token);
       decoded = this.jwtService.verify(token?.slice(7), {
         secret: this.configService.get('jwt').secret,
       });
       user = await this.prismaService.user.findUnique({
         where: { id: decoded?.sub },
       });
-      console.log('user null', user);
     } else {
-      console.log('토큰 없을 경우');
-      console.log('token', token);
       user = null;
     }
 
@@ -546,7 +462,6 @@ export class CommentService {
               },
             },
           });
-          console.log('Promise userId', userId);
           return {
             id,
             profile,
@@ -580,22 +495,17 @@ export class CommentService {
     page?: number,
     limit?: number,
   ) {
-    console.log('****back token, param', token, param);
     let user = null;
     let decoded = null;
 
     if (token !== 'Bearer null') {
-      console.log('토큰 있을 경우', token);
       decoded = this.jwtService.verify(token?.slice(7), {
         secret: this.configService.get('jwt').secret,
       });
       user = await this.prismaService.user.findUnique({
         where: { id: decoded?.sub },
       });
-      console.log('user null', user);
     } else {
-      console.log('토큰 없을 경우');
-      console.log('token', token);
       user = null;
     }
 
@@ -679,8 +589,6 @@ export class CommentService {
 
       const [items, total] = await Promise.all([mapComment, totalCategory]);
 
-      console.log('itemsitems', items);
-
       return {
         items,
         total,
@@ -692,20 +600,16 @@ export class CommentService {
   }
 
   async getCommenta(token: string, param: string, parentId: string) {
-    console.log('****back token, param', token, param);
-
     let user = null;
     let decoded = null;
 
     if (token !== 'Bearer null') {
-      console.log('토큰 있을 경우', token);
       decoded = this.jwtService.verify(token?.slice(7), {
         secret: this.configService.get('jwt').secret,
       });
       user = await this.prismaService.user.findUnique({
         where: { id: decoded?.sub },
       });
-      console.log('user null', user);
     }
 
     const post = await this.prismaService.post.findUnique({
@@ -730,8 +634,6 @@ export class CommentService {
       },
     });
 
-    console.log('!!!!!!!!!!!');
-
     return Promise.all(
       comment.map(
         async ({
@@ -751,7 +653,6 @@ export class CommentService {
                 },
               })
             : null;
-          console.log('commenta Promise userId', userId);
           return {
             id,
             profile,
@@ -774,8 +675,6 @@ export class CommentService {
 
   async removeComment(postId: string, commentId: string, token: string) {
     //토큰을 이용한 로그인사용자
-    console.log('removeComment token key', token);
-
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
     });
@@ -821,8 +720,6 @@ export class CommentService {
 
   async removeDaetguelLikes(commentId: string, token: string) {
     //토큰을 이용한 로그인사용자
-    console.log('removeComment token key', token);
-
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
     });
@@ -884,9 +781,6 @@ export class CommentService {
   }
 
   async removeComments(postId: string, token: string) {
-    console.log('removeComments 서비스 초입');
-    console.log('removeComment token key', token);
-
     const decoded = this.jwtService.verify(token.slice(7), {
       secret: this.configService.get('jwt').secret,
     });
@@ -909,7 +803,6 @@ export class CommentService {
       const comment = await this.prismaService.comment.deleteMany({
         where: { postId: post.id },
       });
-      console.log('back server comment', comment);
       return comment;
     }
 
@@ -920,7 +813,6 @@ export class CommentService {
     const comment = await this.prismaService.comment.deleteMany({
       where: { postId: post.id },
     });
-    console.log('back server comment', comment);
     return comment;
   }
 }

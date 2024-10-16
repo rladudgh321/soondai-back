@@ -65,7 +65,6 @@ export class PostController {
   async pagenationFindAll(
     @Query() { page = 1, limit = 10, category }: pagenationReqDto,
   ): Promise<any> {
-    console.log('page, limit, token, category', page, limit, category);
     return this.postService.pagenationFindAll(page, limit, category);
   }
 
@@ -120,7 +119,6 @@ export class PostController {
       date_minute,
     }: addpostReqDto,
   ): Promise<any> {
-    console.log('select', select);
     const post = await this.postService.addpost(
       title,
       content,
@@ -141,19 +139,9 @@ export class PostController {
     @Param('id') id: string,
     @Headers('authorization') data: string,
   ): Promise<RemovePostResDto> {
-    console.log('delete', id);
     const post = await this.postService.removePost(id, data);
     return { id: post.id };
   }
-
-  // @ApiBearerAuth()
-  // @Roles(Role.Admin)
-  // @Delete(':id/admin')
-  // async removePostByAdmin(@Param() { id }: removePostReqDto) {
-  //   console.log('delete', id);
-  //   const post = await this.postService.removePostByAdmin(id);
-  //   return post;
-  // }
 
   @ApiPostResponse(UpdatePostResDto)
   @ApiBearerAuth()
@@ -185,7 +173,6 @@ export class PostController {
       date_hour,
       date_minute,
     );
-    console.log('update token', token);
     return post;
   }
 
@@ -219,7 +206,6 @@ export class PostController {
     @Param() { id }: getPostReqDto,
     @Body() { token }: getPostReqDto,
   ): Promise<GetPostReqDto> {
-    console.log('back token', token);
     const post = await this.postService.getPost(id, token);
     return { id, title: post.title, content: post.content };
   }

@@ -36,9 +36,6 @@ export class AuthService {
           name,
         },
       });
-
-      console.log('createUser', createUser);
-
       const accessToken = this.generateAccessToken(createUser.id);
       const refreshToken = this.generateRefreshToken(createUser.id);
 

@@ -12,9 +12,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: true,
+    origin: ['http://220.90.185.248:3000', 'http://127.0.0.1:3000'],
     credentials: true,
-    exposedHeaders: ['Authorization'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: [
+      'Content-Type',
+      'Origin',
+      'X-Requested-With',
+      'Accept',
+      'authorization',
+    ],
+    exposedHeaders: ['authorization'],
   });
 
   const config = new DocumentBuilder()

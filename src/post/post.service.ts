@@ -34,7 +34,6 @@ export class PostService {
     date_hour?: number,
     date_minute?: number,
   ) {
-    console.log('addPost category', category);
     const decoded = this.jwtService.verify(token, {
       secret: this.configService.get('jwt').secret,
     });
@@ -66,18 +65,11 @@ export class PostService {
         .minute(date_minute)
         // .second(0) // Optional: set seconds to 0 if needed
         .toDate(); // Convert to local time
-      console.log('alterTimealterTime', dayjs(alterTime).format());
     } else {
       // selecte에는 날짜 선택된 시간,분이 있음
       alterTime = dayjs(this.createDateMaker(select)).toDate();
     }
     const date = dayjs(alterTime).format();
-    console.log('alterTime (Local Time)', dayjs(alterTime).format());
-    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
-    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
-    console.log('alterTime', alterTime);
-    console.log('date', date);
-
     const post = await this.prismaService.post.create({
       data: {
         title,
@@ -115,9 +107,6 @@ export class PostService {
     alterTime.setSeconds(seconds);
     alterTime.setMilliseconds(milliseconds);
 
-    console.log('currentTime', currentTime);
-    // alterTime.setHours(alterTime.getHours() + 9);
-    console.log('alterTime', alterTime);
     return alterTime;
   }
 
@@ -190,14 +179,6 @@ export class PostService {
     if (post.authorId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
 
-    // await this.prismaService.commentOnUser.deleteMany({
-    //   where: { postId: id },
-    // });
-
-    // await this.prismaService.comment.deleteMany({
-    //   where: { postId: id },
-    // });
-
     const removePost = await this.prismaService.post.delete({ where: { id } });
 
     return {
@@ -206,14 +187,6 @@ export class PostService {
   }
 
   async removePostByAdmin(id: string) {
-    // await this.prismaService.commentOnUser.deleteMany({
-    //   where: { postId: id },
-    // });
-
-    // await this.prismaService.comment.deleteMany({
-    //   where: { postId: id },
-    // });
-
     const removePost = await this.prismaService.post.delete({ where: { id } });
 
     return {
@@ -233,9 +206,6 @@ export class PostService {
     date_hour?: number,
     date_minute?: number,
   ) {
-    console.log('select****', select);
-    console.log('token****', token.split(' ')[1]);
-
     const decoded = this.jwtService.verify(token.split(' ')[1], {
       secret: this.configService.get('jwt').secret,
     });
@@ -278,23 +248,11 @@ export class PostService {
     const selectDate = dayjs(select).tz('Asia/Seoul');
 
     if (!!date_hour && !!date_minute) {
-      alterTime = selectDate
-        .hour(date_hour)
-        .minute(date_minute)
-        // .second(0) // Optional: set seconds to 0 if needed
-        .toDate(); // Convert to local time
-      console.log('alterTimealterTime', dayjs(alterTime).format());
+      alterTime = selectDate.hour(date_hour).minute(date_minute).toDate(); // Convert to local time
     } else {
-      // alterTime = dayjs(post.createdAt).toDate();
       alterTime = dayjs(this.createDateMaker(select)).toDate();
     }
     const date = dayjs(alterTime).format();
-    console.log('alterTime (Local Time)', dayjs(alterTime).format());
-    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
-    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
-    console.log('alterTime', alterTime);
-    console.log('date', date);
-
     const updatePost = await this.prismaService.post.update({
       where: {
         id: params,
@@ -315,8 +273,6 @@ export class PostService {
       },
     });
 
-    console.log('updatePost****', updatePost);
-
     return updatePost;
   }
 
@@ -336,23 +292,10 @@ export class PostService {
     const selectDate = dayjs(select).tz('Asia/Seoul');
 
     if (!!date_hour && !!date_minute) {
-      alterTime = selectDate
-        .hour(date_hour)
-        .minute(date_minute)
-        // .second(0) // Optional: set seconds to 0 if needed
-        .toDate(); // Convert to local time
-      console.log('alterTimealterTime', dayjs(alterTime).format());
+      alterTime = selectDate.hour(date_hour).minute(date_minute).toDate(); // Convert to local time
     } else {
-      // alterTime = dayjs(post.createdAt).toDate();
       alterTime = dayjs(this.createDateMaker(select)).toDate();
     }
-    const date = dayjs(alterTime).format();
-    console.log('alterTime (Local Time)', dayjs(alterTime).format());
-    console.log('alterTime (UTC)', dayjs(alterTime).utc().format());
-    console.log('alterTime (ISO)', alterTime.toISOString()); // Log ISO string
-    console.log('alterTime', alterTime);
-    console.log('date', date);
-
     const updatePost = await this.prismaService.post.update({
       where: {
         id,
@@ -380,15 +323,14 @@ export class PostService {
     if (!file) {
       throw new BadRequestException('파일을 찾을 수 없습니다');
     }
-    console.log('file path', file);
-    return file.path;
+
+    const imageUrl = `${
+      process.env.NODE_ENV === 'production'
+        ? 'http://220.90.185.248:3065'
+        : 'http://localhost:3065'
+    }/uploads/${file.filename}`;
+    return imageUrl; // 클라이언트에서 사용할 수 있도록 URL 반환
   }
-
-  //user.id가 없으면 return null;
-  //user.id가 있고, admin사용자라면 그대로 리턴
-  //user.id가 게시글 사용자와 같다면 그대로 리턴
-  //그외는 return null;
-
   async pagenationFindAll(page: number, limit: number, category?: string) {
     const skip = (page - 1) * limit;
 
@@ -422,7 +364,6 @@ export class PostService {
         findCategoryAll,
         totalCategory,
       ]);
-      console.log('findCategoryAll', items);
       return {
         items,
         total,

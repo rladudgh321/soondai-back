@@ -85,7 +85,6 @@ export class CommentController {
       token,
       param,
     );
-    console.log('mutationIfDeletePost_deleteManyLike comment', comment.count);
     return comment;
   }
 
@@ -111,7 +110,6 @@ export class CommentController {
     @Param() { postId, commentId }: removeCommentReqDto,
     @Headers('authorization') token: string,
   ): Promise<removeCommentResDto> {
-    console.log('removeComment', token);
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
@@ -132,7 +130,6 @@ export class CommentController {
     @Param() { postId, commentId }: removeCommentReqDto,
     @Headers('authorization') token: string,
   ): Promise<any> {
-    console.log('removeComment', token);
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
@@ -154,8 +151,6 @@ export class CommentController {
     @Headers('authorization') token: string,
     @Param() { param, parentId }: getCommentReqDto,
   ): Promise<any> {
-    console.log('************************************', token, param);
-    console.log(token, param, parentId);
     const comment = await this.commentService.getCommenta(
       token,
       param,
@@ -164,7 +159,6 @@ export class CommentController {
     const commentWithParentId = comment.filter((v) => v.parentId !== null);
     return commentWithParentId;
   }
-
 
   @ApiPostResponse(getCommentResDto)
   @ApiBearerAuth()
@@ -176,7 +170,6 @@ export class CommentController {
     @Query() { page = 1, limit = 10 }: GetCommentPaginationReqDto,
     // @Param() { param }: getCommentReqDto,
   ): Promise<any> {
-    console.log('************************************', token, param);
     const comment = await this.commentService.getCommentPagination(
       token,
       param,
@@ -195,7 +188,6 @@ export class CommentController {
     @Param('param') param: string,
     // @Param() { param }: getCommentReqDto,
   ): Promise<any> {
-    console.log('************************************', token, param);
     const comment = await this.commentService.getComment(token, param);
     const commentWithoutParentId = comment.filter((v) => v.parentId === null);
     return commentWithoutParentId;
@@ -263,43 +255,19 @@ export class CommentController {
     };
   }
 
-  // @ApiBearerAuth()
-  // @Delete(':postId/deleteComments')
-  // async removeComments(
-  //   @Param('postId') postId: string,
-  //   @Headers('authorization') token: string,
-  // ): Promise<removeCommentsResDto> {
-  //   console.log('removeCommentsremoveCommentsremoveCommentsremoveComments');
-  //   console.log('removeComment', token, postId);
-  //   const post = await this.prismaService.post.findUnique({
-  //     where: { id: postId },
-  //   });
-
-  //   if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-  //   console.log('*removeComments* 서비스 들어가기 전');
-  //   const comment = await this.commentService.removeComments(postId, token);
-  //   // count obejct { count : 3}
-  //   console.log('removeComment return', comment);
-  //   return { count: comment.count };
-  // }
-
   @ApiBearerAuth()
   @Delete(':postId/deleteComments')
   async removeComments(
     @Param('postId') postId: string,
     @Headers('authorization') token: string,
   ): Promise<removeCommentsResDto> {
-    console.log('removeCommentsremoveCommentsremoveCommentsremoveComments');
-    console.log('removeComment', token, postId);
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
 
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-    console.log('*removeComments* 서비스 들어가기 전');
     const comment = await this.commentService.removeComments(postId, token);
     // count obejct { count : 3}
-    console.log('removeComment return', comment);
     return { count: comment.count };
   }
 }

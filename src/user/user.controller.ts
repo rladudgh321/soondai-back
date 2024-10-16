@@ -36,8 +36,6 @@ export class UserController {
     @Req() req,
   ): Promise<FindUserResDto[]> {
     const users = await this.userService.findAll(page, size);
-    console.log('userId', user);
-    console.log('req', req.user);
     Logger.log(`Controller - User: ${JSON.stringify(user)}`);
     return users.map(({ id, email, createdAt }) => {
       return { id, email, createdAt: createdAt.toISOString() };

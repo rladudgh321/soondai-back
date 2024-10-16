@@ -422,7 +422,7 @@ export class PostService {
         findCategoryAll,
         totalCategory,
       ]);
-
+      console.log('findCategoryAll', items);
       return {
         items,
         total,

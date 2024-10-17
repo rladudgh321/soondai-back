@@ -52,6 +52,6 @@ async function bootstrap() {
   const port = 3065;
   console.info(`서버모드는 ${stage}이고 port는 ${port}`);
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 }
 bootstrap();

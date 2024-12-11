@@ -326,7 +326,7 @@ export class PostService {
 
     const imageUrl = `${
       process.env.NODE_ENV === 'production'
-        ? 'http://220.90.185.248:3065'
+        ? process.env.CLIENT_URL
         : 'http://localhost:3065'
     }/uploads/${file.filename}`;
     return imageUrl; // 클라이언트에서 사용할 수 있도록 URL 반환

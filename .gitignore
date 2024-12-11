@@ -41,3 +41,14 @@ node_modules
 *.pem
 .env
 .next
+
+# 제로필 사용
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+uploads/*

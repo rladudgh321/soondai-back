@@ -160,9 +160,9 @@ export class CommentController {
     return commentWithParentId;
   }
 
-  @ApiPostResponse(getCommentResDto)
-  @ApiBearerAuth()
   @Public()
+  @ApiPostResponse(getCommentResDto)
+  // @ApiBearerAuth()
   @Get('/pagination/:param') // param은 postId
   async getCommentPagination(
     @Headers('authorization') token: string | null,
@@ -170,6 +170,7 @@ export class CommentController {
     @Query() { page = 1, limit = 10 }: GetCommentPaginationReqDto,
     // @Param() { param }: getCommentReqDto,
   ): Promise<any> {
+    console.log('getCommentPagination token', token);
     const comment = await this.commentService.getCommentPagination(
       token,
       param,

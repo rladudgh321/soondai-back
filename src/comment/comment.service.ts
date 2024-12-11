@@ -411,7 +411,7 @@ export class CommentService {
     let user = null;
     let decoded = null;
 
-    if (token !== 'Bearer null') {
+    if (token) {
       decoded = this.jwtService.verify(token?.slice(7), {
         secret: this.configService.get('jwt').secret,
       });
@@ -498,7 +498,7 @@ export class CommentService {
     let user = null;
     let decoded = null;
 
-    if (token !== 'Bearer null') {
+    if (token) {
       decoded = this.jwtService.verify(token?.slice(7), {
         secret: this.configService.get('jwt').secret,
       });
@@ -603,7 +603,7 @@ export class CommentService {
     let user = null;
     let decoded = null;
 
-    if (token !== 'Bearer null') {
+    if (token) {
       decoded = this.jwtService.verify(token?.slice(7), {
         secret: this.configService.get('jwt').secret,
       });

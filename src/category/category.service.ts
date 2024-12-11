@@ -70,4 +70,30 @@ export class CategoryService {
 
     return deleteCategory;
   }
+
+  // 태그 수정
+  async updateCategories(id: string, name: string, token: string) {
+    // Prisma를 사용하여 태그 수정
+    const decoded = this.jwtService.verify(token.slice(7), {
+      secret: this.configService.get('jwt').secret,
+    });
+
+    const user = this.userService.findOne(decoded.sub);
+
+    if (!user) {
+      throw new NotFoundException('작성자를 찾을 수 습니다.');
+    }
+
+    const updatedTag = await this.prismaService.category.update({
+      where: { id }, // ID로 찾기
+      data: { name }, // 이름만 업데이트
+    });
+
+    // 만약 태그가 없다면 NotFoundException을 던짐
+    if (!updatedTag) {
+      throw new NotFoundException(`Tag with ID ${id} not found`);
+    }
+
+    return updatedTag; // 수정된 태그 반환
+  }
 }

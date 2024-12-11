@@ -146,7 +146,6 @@ exports.Prisma.PostScalarFieldEnum = {
   content: 'content',
   highlight: 'highlight',
   authorId: 'authorId',
-  categoryId: 'categoryId',
   image: 'image',
   select: 'select'
 };

@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Headers, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiExtraModels, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorator/public.decorator';
 import {
   ApiPostResponse
@@ -13,7 +13,7 @@ import { addCategoryResDto } from './dto/res.dto';
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
-
+  
   @ApiPostResponse(addCategoryResDto)
   @ApiBearerAuth()
   @Post('/')
@@ -34,7 +34,6 @@ export class CategoryController {
     return category;
   }
 
-  @ApiBearerAuth()
   @Public()
   @Get('/')
   async getCategories() {
@@ -55,4 +54,22 @@ export class CategoryController {
     );
     return category;
   }
+
+    // 태그 수정
+    @ApiBearerAuth()
+    @ApiParam({
+      name: "id",
+      description: "The ID of the tag to update",
+      example: 1,
+    }) // Swagger에서 파라미터 id에 대한 설명 추가
+    // @ApiPostResponse(UpdateTagResDto)
+    @Patch(":id")
+    async updateTag(
+      @Param("id") id: string,
+      @Body() { name }: any,
+      @Headers("authorization") token: string,
+    ): Promise<any> {
+      const updatedTag = await this.categoryService.updateCategories(id, name, token);
+      return { id, name: updatedTag.name };
+    }
 }

@@ -63,9 +63,9 @@ export class PostController {
   @ApiBearerAuth()
   @Get('/pagination')
   async pagenationFindAll(
-    @Query() { page = 1, limit = 10, category }: pagenationReqDto,
+    @Query() { page = 1, limit = 10, categories }: pagenationReqDto,
   ): Promise<any> {
-    return this.postService.pagenationFindAll(page, limit, category);
+    return this.postService.pagenationFindAll(page, limit, categories);
   }
 
   @Public()
@@ -113,7 +113,7 @@ export class PostController {
       token,
       highlight,
       image,
-      category,
+      categories,
       select,
       date_hour,
       date_minute,
@@ -125,7 +125,7 @@ export class PostController {
       token,
       highlight,
       image,
-      category,
+      categories,
       select,
       date_hour,
       date_minute,
@@ -155,7 +155,7 @@ export class PostController {
       content,
       highlight,
       image,
-      category,
+      categories,
       select,
       date_hour,
       date_minute,
@@ -168,7 +168,7 @@ export class PostController {
       token,
       highlight,
       image,
-      category,
+      categories,
       select,
       date_hour,
       date_minute,
@@ -184,7 +184,7 @@ export class PostController {
     @Param() { params }: UpdatePostReqDto,
     @Headers('authorization') token: string,
     @Body()
-    { title, content, highlight, image, category, select }: UpdatePostReqDto,
+    { title, content, highlight, image, categories, select }: UpdatePostReqDto,
   ): Promise<any> {
     const post = await this.postService.updatePost(
       params,
@@ -193,7 +193,7 @@ export class PostController {
       token,
       highlight,
       image,
-      category,
+      categories,
       select,
     );
     return { title: post.title, content: post.content };

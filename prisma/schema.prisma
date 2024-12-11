@@ -39,16 +39,15 @@ model RefreshToken {
 }
 
 model Post {
-  id         String    @id @default(uuid())
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  title      String    @db.VarChar(255)
+  id         String     @id @default(uuid())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  title      String     @db.VarChar(255)
   content    String?
-  highlight  Boolean   @default(false)
-  author     User      @relation(fields: [authorId], references: [id])
+  highlight  Boolean    @default(false)
+  author     User       @relation(fields: [authorId], references: [id])
   authorId   String
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
+  categories Category[] @relation("PostCategories")
   image      String?
   select     DateTime?
   comments   Comment[]
@@ -82,5 +81,5 @@ model CommentOnUser {
 model Category {
   id    String @id @default(uuid())
   name  String @unique
-  posts Post[]
+  posts Post[] @relation("PostCategories")
 }

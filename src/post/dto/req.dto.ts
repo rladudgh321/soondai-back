@@ -23,7 +23,7 @@ export class addpostReqDto {
   image?: string;
 
   @ApiProperty({ title: '카테고리', required: true })
-  category: string;
+  categories: string[];
 
   @ApiPropertyOptional({ title: '선택 날짜' })
   select?: Date;
@@ -68,7 +68,7 @@ export class UpdatePostReqDto {
   image: string;
 
   @ApiProperty({ required: true, title: '카테고리' })
-  category: string;
+  categories: string[];
 
   @ApiPropertyOptional({
     title: '날짜 선택',
@@ -109,7 +109,7 @@ export class UploadImageReqDto {
 
 export class getPostsReqDto {
   @ApiPropertyOptional({ title: '카테고리아이디' })
-  categoryId: string;
+  categoriesId: string;
 }
 
 export class pagenationReqDto {
@@ -128,5 +128,5 @@ export class pagenationReqDto {
   readonly limit?: number;
 
   @ApiPropertyOptional({ title: '카테고리 아이디' })
-  category: string;
+  categories: string[];
 }

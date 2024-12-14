@@ -54,7 +54,6 @@ export class PostService {
     }
   
     const categoryId = categories.map(category => category.id);
-    console.log('addPost categoryId', categoryId);
 
     // 카테고리들이 실제로 존재하는지 확인
     const existingCategories = await this.prismaService.category.findMany({
@@ -63,8 +62,6 @@ export class PostService {
       },
     });
 
-    console.log('existingCategories', existingCategories);
-  
     if (existingCategories.length !== categories.length) {
       throw new NotFoundException('제공된 카테고리 중 일부가 존재하지 않습니다.');
     }
@@ -302,8 +299,6 @@ export class PostService {
       alterTime = dayjs(this.createDateMaker(select)).toDate(); // 기본 선택 시간
     }
   
-    console.log('updatePostInternal categories', categories);
-  
     // 기존 카테고리 아이디 추출
     const currentCategoryIds = categories.map((category) => category.id);
   
@@ -320,8 +315,6 @@ export class PostService {
     const disconnectCategories = currentPostCategoryIds
       .filter((categoryId) => !currentCategoryIds.includes(categoryId))  // 기존 카테고리 중 새 카테고리와 일치하지 않는 것들
       .map((categoryId) => ({ id: categoryId }));
-  
-    console.log('disconnectCategories:', disconnectCategories);
   
     // 포스트 업데이트
     const updatePost = await this.prismaService.post.update({
@@ -343,7 +336,6 @@ export class PostService {
       },
     });
   
-    console.log('updatePost', updatePost);
     return updatePost;
   }
   

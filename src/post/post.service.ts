@@ -29,7 +29,7 @@ export class PostService {
     token: string,
     highlight: boolean,
     image: string,
-    categories: string[],  // multiple category IDs
+    categories:  { id: string; name: string }[],  // multiple category IDs
     select: Date,
     date_hour?: number,
     date_minute?: number,
@@ -53,12 +53,17 @@ export class PostService {
       throw new NotFoundException('하나 이상의 카테고리가 존재하지 않습니다.');
     }
   
+    const categoryId = categories.map(category => category.id);
+    console.log('addPost categoryId', categoryId);
+
     // 카테고리들이 실제로 존재하는지 확인
     const existingCategories = await this.prismaService.category.findMany({
       where: {
-        name: { in: categories }, // 주어진 카테고리 ID 배열을 기준으로 카테고리들 검색
+        id: { in: categoryId }, // 주어진 카테고리 ID 배열을 기준으로 카테고리들 검색
       },
     });
+
+    console.log('existingCategories', existingCategories);
   
     if (existingCategories.length !== categories.length) {
       throw new NotFoundException('제공된 카테고리 중 일부가 존재하지 않습니다.');

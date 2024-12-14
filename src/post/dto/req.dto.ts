@@ -23,7 +23,7 @@ export class addpostReqDto {
   image?: string;
 
   @ApiProperty({ title: '카테고리', required: true })
-  categories: string[];
+  categories: {id: string; name: string;}[];
 
   @ApiPropertyOptional({ title: '선택 날짜' })
   select?: Date;

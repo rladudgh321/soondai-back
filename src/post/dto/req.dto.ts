@@ -68,7 +68,7 @@ export class UpdatePostReqDto {
   image: string;
 
   @ApiProperty({ required: true, title: '카테고리' })
-  categories: string[];
+  categories: {id: string; name: string;}[];
 
   @ApiPropertyOptional({
     title: '날짜 선택',

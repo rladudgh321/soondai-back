@@ -216,125 +216,121 @@ export class PostService {
     token: string,
     highlight: boolean,
     image: string,
-    categories: string[],  // 여러 카테고리 ID 배열
+    categories: { id: string; name: string }[],  // 여러 카테고리 ID 배열
     select: Date,
     date_hour?: number,
     date_minute?: number,
-  ) {
+  ): Promise<any> {
     const decoded = this.jwtService.verify(token.split(' ')[1], {
       secret: this.configService.get('jwt').secret,
     });
   
     const user = await this.userService.findOne(decoded.sub);
-  
+    
+    // 게시글을 찾고 카테고리 연결을 수정하는 부분
     const post = await this.prismaService.post.findUnique({
       where: { id: params },
+      include: { categories: true },  // 기존에 연결된 카테고리들을 포함
     });
+    
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다');
-  
+    
     // 카테고리 정보가 누락된 경우 처리
     if (!categories || categories.length === 0) {
       throw new NotFoundException('카테고리 정보가 누락되었습니다');
     }
   
-    // 각 카테고리가 존재하는지 확인
-    const existingCategories = await this.prismaService.category.findMany({
-      where: {
-        id: { in: categories },  // 카테고리 ID가 배열에 있는지 확인
-      },
-    });
-  
-    if (existingCategories.length !== categories.length) {
-      throw new NotFoundException('일부 카테고리가 존재하지 않습니다');
-    }
-  
+    // 관리자 권한 체크 (Admin 역할인 경우)
     if (user.role === Role.Admin) {
-      return this.updatePostByAdmin(
+      return this.updatePostInternal(
         params,
         title,
         content,
         highlight,
         image,
-        categories,  // 카테고리 배열을 그대로 전달
+        categories,
         select,
         date_hour,
         date_minute,
       );
     }
   
-    // 사용자 권한 체크 (게시물 작성자만 수정 가능)
+    // 일반 사용자 권한 체크
     if (post.authorId !== user.id)
       throw new UnauthorizedException('허용되지 않은 방법입니다');
   
-    let alterTime = null;
-  
-    const selectDate = dayjs(select).tz('Asia/Seoul');
-  
-    if (!!date_hour && !!date_minute) {
-      alterTime = selectDate.hour(date_hour).minute(date_minute).toDate(); // 선택한 시간으로 변환
-    } else {
-      alterTime = dayjs(this.createDateMaker(select)).toDate(); // 기본 선택 시간
-    }
-  
-    const updatePost = await this.prismaService.post.update({
-      where: {
-        id: params,
-      },
-      data: {
-        title,
-        content,
-        highlight,
-        image,
-        categories: {
-          connect: categories.map((categoryId) => ({ id: categoryId })), // 여러 카테고리 연결
-        },
-        select,
-        createdAt: alterTime,
-        updatedAt: dayjs(Date.now()).toDate(),
-      },
-    });
-  
-    return updatePost;
+    return this.updatePostInternal(
+      params,
+      title,
+      content,
+      highlight,
+      image,
+      categories,
+      select,
+      date_hour,
+      date_minute,
+    );
   }
   
-
-  private async updatePostByAdmin(
+  private async updatePostInternal(
     id: string,
     title: string,
     content: string,
     highlight: boolean,
     image: string,
-    categories: string[],  // 여러 개의 카테고리를 받는 배열
+    categories: { id: string; name: string }[],  // 여러 개의 카테고리
     select: Date,
     date_hour?: number,
     date_minute?: number,
-  ) {
+  ): Promise<any> {
     let alterTime = null;
-  
+    
     const selectDate = dayjs(select).tz('Asia/Seoul');
-  
+    
     // 시간 설정
     if (!!date_hour && !!date_minute) {
       alterTime = selectDate
         .hour(date_hour)
         .minute(date_minute)
-        .toDate(); // 시간 변환
+        .toDate(); // 선택한 시간으로 변환
     } else {
-      alterTime = dayjs(this.createDateMaker(select)).toDate();
+      alterTime = dayjs(this.createDateMaker(select)).toDate(); // 기본 선택 시간
     }
+  
+    console.log('updatePostInternal categories', categories);
+  
+    // 기존 카테고리 아이디 추출
+    const currentCategoryIds = categories.map((category) => category.id);
+  
+    // 현재 게시글에서 연결된 카테고리 아이디 추출
+    const currentPostCategories = await this.prismaService.post.findUnique({
+      where: { id },
+      select: { categories: { select: { id: true } } },
+    });
+  
+    // 기존 카테고리 ID 리스트
+    const currentPostCategoryIds = currentPostCategories?.categories.map(c => c.id) || [];
+  
+    // 기존 카테고리와 새 카테고리 비교하여 `disconnect`할 카테고리들
+    const disconnectCategories = currentPostCategoryIds
+      .filter((categoryId) => !currentCategoryIds.includes(categoryId))  // 기존 카테고리 중 새 카테고리와 일치하지 않는 것들
+      .map((categoryId) => ({ id: categoryId }));
+  
+    console.log('disconnectCategories:', disconnectCategories);
   
     // 포스트 업데이트
     const updatePost = await this.prismaService.post.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: {
         title,
         content,
         highlight,
         image,
         categories: {
-          connect: categories.map((categoryId) => ({ id: categoryId })), // 여러 카테고리를 연결
+          // 기존 카테고리 연결 끊기
+          disconnect: disconnectCategories, // disconnect 대상 카테고리
+          // 새 카테고리 연결
+          connect: categories.map((category) => ({ id: category.id })),
         },
         select,
         createdAt: alterTime, // 선택한 시간
@@ -342,8 +338,10 @@ export class PostService {
       },
     });
   
+    console.log('updatePost', updatePost);
     return updatePost;
   }
+  
   
 
   async uploadImage(file: Express.Multer.File) {

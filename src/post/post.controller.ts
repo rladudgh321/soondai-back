@@ -63,9 +63,10 @@ export class PostController {
   @ApiBearerAuth()
   @Get('/pagination')
   async pagenationFindAll(
-    @Query() { page = 1, limit = 10, categories }: pagenationReqDto,
+    @Query() { page = 1, limit = 10, category }: pagenationReqDto,
   ): Promise<any> {
-    return this.postService.pagenationFindAll(page, limit, categories);
+    console.log('page: ', page, 'limit: ', limit, 'category: ', category);
+    return this.postService.pagenationFindAll(page, limit, category);
   }
 
   @Public()

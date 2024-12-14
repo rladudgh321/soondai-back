@@ -128,5 +128,5 @@ export class pagenationReqDto {
   readonly limit?: number;
 
   @ApiPropertyOptional({ title: '카테고리 아이디' })
-  categories: string[];
+  category: string;
 }

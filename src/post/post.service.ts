@@ -361,43 +361,45 @@ export class PostService {
     }/uploads/${file.filename}`;
     return imageUrl; // 클라이언트에서 사용할 수 있도록 URL 반환
   }
-  async pagenationFindAll(page: number, limit: number, categories?: string[]) {
+  async pagenationFindAll(page: number, limit: number, category?: string) {
     const skip = (page - 1) * limit;
   
     // getPostsByCategoryOrAll에 categories 배열을 넘겨서 호출
-    return this.getPostsByCategoryOrAll(skip, limit, categories);
+    return this.getPostsByCategoryOrAll(skip, limit, category);
   }
   
 
   async getPostsByCategoryOrAll(
     skip: number,
     limit: number,
-    categories?: string[], // 카테고리 ID 배열
+    categories?: string // 카테고리 필터링을 위한 단일 카테고리 ID (또는 쉼표로 구분된 여러 카테고리 ID)
   ) {
     try {
-      // 카테고리 필터가 있을 경우, categories 배열을 활용한 필터링
+      // 카테고리가 주어졌다면, 해당 카테고리를 기준으로 게시글을 필터링
       const whereClause = categories
         ? {
             categories: {
               some: {
-                id: { in: categories }, // 다대다 관계에서 여러 카테고리 ID를 포함하는 포스트를 찾음
+                id: { in: categories.split(',') }, // 여러 카테고리 처리 시 쉼표로 구분된 문자열을 배열로 변환
               },
             },
           }
-        : {}; // 카테고리 필터가 없으면 모든 포스트를 가져옴
+        : {}; // 카테고리가 없다면 모든 게시글을 반환
   
+      // 게시글을 카테고리 필터링 조건과 함께 조회
       const findCategoryAll = this.prismaService.post.findMany({
         where: whereClause,
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'desc', // 최신 게시글부터 정렬
         },
         include: {
-          categories: true, // 카테고리와 함께 게시물 조회
+          categories: true, // 게시글과 관련된 카테고리 정보 포함
         },
       });
   
+      // 전체 게시글 수를 계산
       const totalCategory = this.prismaService.post.count({
         where: whereClause,
       });
@@ -410,7 +412,8 @@ export class PostService {
       };
     } catch (err) {
       console.error(err);
-      throw Error(err);
+      throw Error(err); // 에러 처리
     }
   }
+  
 }
